@@ -18,9 +18,13 @@ class lista():
         
     def mostrarTokens(self): #Metodo de prueba para verificar el correcto guardado de los tokens
         i:token1
-        for i in self.listaTokens:
-            r =i.enviarTokens()
-            print(r)
+        if len(self.listaTokens)==0:
+            print('No hay tokens aún')
+            MessageBox.showinfo('Mensaje','No hay tokens para mostrar')
+        else:
+            for i in self.listaTokens:
+                r =i.enviarTokens()
+                print(r)
 
     def mostrarErrores(self): #Metodo de prueba para verificar el correcto guardado de los errores
         i:error
@@ -33,9 +37,15 @@ class lista():
                 s = i.enviarErrores()
                 print(s)
 
-    def eliminarTodo(self):
+    def limpiarLogErrores(self):
         del self.listaErrores[:]
+        print("Vaciando...")
+        MessageBox.showinfo('Mensaje','Errores eliminados correctamente')
+    
+    def limpiarLogTokens(self):
         del self.listaTokens[:]
+        print("Vaciando...")
+        MessageBox.showinfo('Mensaje','Tokens eliminados correctamente')
     
     def reporteTokens(self):
         if len(self.listaTokens)==0:

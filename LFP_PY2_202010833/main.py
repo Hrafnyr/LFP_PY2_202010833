@@ -1,5 +1,7 @@
 
 import os as documento
+
+from click import command
 from listas import lista
 import tkinter as tk
 from tkinter import *
@@ -11,6 +13,7 @@ import webbrowser
 
 
 data = lista()
+
 
 def abrirDocumentoForm():
     Tk().withdraw() #Remover ventana
@@ -39,7 +42,6 @@ def mostrarDatos():
     #txt.delete("1.0", "end")
 
     texto = cajaEnvio.get() + "\n" #Obtiene el dato de envío
-    
     txt.config(state='normal') #Habilita la edicion del scrolledtext
     txt.tag_configure("tag_name", justify='right')
     txt.insert(INSERT,texto) #insertar texto en el scrolledtext
@@ -52,15 +54,17 @@ def mostrarDatos():
     
     return texto
 
-def analizarTexto(): 
-    data.eliminarTodo()
-    t = txt.get("1.0", tk.END)
-    data.botonEvento(t)
+def analizarTexto():  #Analizador léxico
+    #data.botonEvento(t)
+    t = cajaEnvio.get() + " "
+    mostrarDatos()
     fila = 1
     columna = 1
     x = 0   #Indice
     estado = 0 #Estado inicial
     lexema = ""
+    contadorDigitos = 0 #----> número: 2, año: 4
+    verifador1 = False
 
     while x < len(t):
         if estado == 0:
@@ -80,7 +84,7 @@ def analizarTexto():
                 x+=1
                 estado = 1
                 columna +=1
-            elif t[x] == "~" or t[x]==">" or t[x]=="[" or t[x]=="<" or t[x]==":" or t[x]=="," or t[x]=="]": #Si viene un símbolo se va al estado 2
+            elif t[x] == "<" or t[x]==">" or t[x]=="-": #Si viene un símbolo se va al estado 2
                 lexema = t[x]
                 estado = 2
             elif t[x] == "\"": #Si vienen comillas dobles  se va al estado 3
@@ -88,46 +92,34 @@ def analizarTexto():
                 lexema=""
                 x+=1
                 estado = 3
-            elif t[x] == "\'": #Si vienen comillas simples  se va al estado 4
-                columna +=1
-                lexema=""
+            
+            elif t[x].isdigit(): #Si viene un dígito se va al estado 4
+                lexema = t[x]
+                columna+=1
                 x+=1
+                contadorDigitos+=1
                 estado = 4
             else:
-                data.insertError(t[x],"Caracter desconocido",fila,columna)
+                data.insertError(t[x],"Caracter desconocido, error léxico",fila,columna)
                 columna +=1
                 x+=1
                 estado = 0  
-        elif estado == 1: #Termina de concatenar los caracteres de tipo alfabeto y guarda tokens de palabra reservada
+        
+        elif estado == 1: #Termina de concatenar los caracteres de tipo alfabeto y guarda tokens de palabra reservada o ID
             if t[x].isalpha() or t[x]=="_" or t[x].isdigit():
                 lexema+= t[x]
-                x+=1     
+                x+=1
                 columna +=1         
                 estado = 1
             else:
-                if lexema =="formulario":
-                    data.insertarToken("Token palabra reservada",lexema,fila,columna)
-                elif lexema =="tipo":
-                    data.insertarToken("Token ID tipo",lexema,fila,columna)
-                elif lexema =="valores":
-                    data.insertarToken("Token ID valores",lexema,fila,columna)
-                elif lexema =="fondo":
-                    data.insertarToken("Token ID fondo",lexema,fila,columna)
-                elif lexema =="valor":
-                    data.insertarToken("Token ID valor",lexema,fila,columna)
-                elif lexema =="evento":
-                    data.insertarToken("Token ID evento",lexema,fila,columna)
-                elif lexema =="info":
-                    data.insertarToken("Token ID info",lexema,fila,columna)
-                elif lexema =="entrada":
-                    data.insertarToken("Token ID entrada",lexema,fila,columna)
-                else:
-                    data.insertarToken("Token ID",lexema,fila,columna)
+                inicio = columna-len(lexema) 
+                verificaPalabrasReservadas(lexema,fila,inicio)
                 estado=0
+
         elif estado == 2: #Estado de símbolos
-            if t[x] == "~":
+            if t[x] == "<":
                 lexema=t[x]
-                data.insertarToken("Token símbolo virgulilla",lexema,fila,columna)
+                data.insertarToken("Token símbolo menor que",lexema,fila,columna)
                 x+=1
                 columna +=1
                 estado = 2
@@ -137,76 +129,74 @@ def analizarTexto():
                 x+=1
                 columna +=1
                 estado = 2
-            elif t[x]=="[":
+            elif t[x]=="-":
                 lexema=t[x]
-                data.insertarToken("Token símbolo corchete abertura",lexema,fila,columna)
+                data.insertarToken("Token símbolo guión",lexema,fila,columna)
                 x+=1
-                columna +=1
+                columna +=1          
                 estado = 2
-            elif t[x]=="<":
-                lexema=t[x]
-                data.insertarToken("Token símbolo menor que",lexema,fila,columna)
+            elif t[x]== "f" or t[x]== "j" or t[x]== "i" or t[x]== "n":
+                lexema+=t[x]
                 x+=1
-                columna +=1
-                estado = 2
-            elif t[x]==":":
-                lexema=t[x]
-                data.insertarToken("Token símbolo dos puntos",lexema,fila,columna)
-                x+=1
-                columna +=1
-                estado = 2
-            elif t[x]==",":
-                lexema=t[x]
-                data.insertarToken("Token símbolo coma",lexema,fila,columna)
-                x+=1
-                columna +=1
-                estado = 2
-            elif t[x]=="]":
-                lexema=t[x]
-                data.insertarToken("Token símbolo corchete cierre",lexema,fila,columna)
-                x+=1
-                columna +=1
+                columna +=1          
                 estado = 2
             else:
+                inicio = columna - len(lexema)
+                if lexema == "-f" or lexema == "-ji" or lexema == "-jf" or lexema == "-n":
+                    label = "Palabra reservada {}".format(lexema)
+                    data.insertarToken(label,lexema,fila,inicio) 
                 estado = 0
+
         elif estado == 3: #Estado para cadenas  " "
             if  t[x] != "\"":
                 lexema+=t[x]
                 x+=1
                 columna +=1
                 estado = 3       
-            else:   
-                if lexema =="etiqueta":
-                    data.insertarToken("Token cadena etiqueta",lexema,fila,columna)
-                elif lexema =="texto":
-                    data.insertarToken("Token cadena texto",lexema,fila,columna)
-                elif lexema =="grupo-radio":
-                    data.insertarToken("Token cadena g-radio",lexema,fila,columna)
-                elif lexema =="grupo-option":
-                    data.insertarToken("Token cadena g-option",lexema,fila,columna)
-                elif lexema =="boton" or lexema =="botón":
-                    data.insertarToken("Token cadena boton",lexema,fila,columna)
-                else: data.insertarToken("Token cadena comilla doble",lexema,fila,columna)
+            else:
+                inicio = columna - len(lexema)   
+                data.insertarToken("Token cadena comilla doble",lexema,fila,inicio)
                 x+=1
                 columna +=1
                 estado = 0
-        elif estado == 4: #Estado para cadenas con ''
-            if  t[x] != "\'":
+        
+        elif estado == 4: #Estado para dígitos
+           
+            if  t[x].isdigit():
                 lexema+=t[x]
                 columna +=1
                 x+=1
+                contadorDigitos+=1
                 estado = 4
-            
             else:
-                data.insertarToken("Token cadena simple",lexema,fila,columna)
-                x+=1
-                columna +=1
+                inicio = columna - len(lexema)
+                if contadorDigitos == 4:
+                    data.insertarToken("Token año",lexema,fila,inicio)
+                elif contadorDigitos > 0 and contadorDigitos <= 2:
+                    data.insertarToken("Token número",lexema,fila,inicio)            
+                else:
+                    data.insertarToken("Token dígito",lexema,fila,inicio)
+                
+                contadorDigitos = 0
                 estado = 0
 
     print('Errores:')
     data.mostrarErrores()
+
     print('Tokens:')
     data.mostrarTokens()
+
+def verificaPalabrasReservadas(lexema,fila,columna): #Método que verifica las palabras reservadas
+    palabras_Reservadas = ["RESULTADO", "VS","TEMPORADA", "JORNADA","-f","GOLES","LOCAL","VISITANTE","TOTAL","TABLA","PARTIDOS", "-ji", "-jf","TOP","SUPERIOR","INFERIOR","-n","ADIOS"]
+    encontrado = False
+    for x in palabras_Reservadas:
+        if x == lexema:
+            label = "Token palabra reservada {}".format(x)
+            data.insertarToken(label,lexema,fila,columna)
+            encontrado = True
+         
+    if encontrado == False:
+        data.insertarToken("Token ID",lexema,fila,columna)
 
 def verReportes():
     op = listaReportes.get()
@@ -228,6 +218,7 @@ def verHtml():
     if t:
         data.crearHtml()
 
+
 #------------------------------Interfaz gráfica-------------------------------------
 
 root = tk.Tk()                 #Raiz           
@@ -243,11 +234,6 @@ root.eval('tk::PlaceWindow . center')
 # botonCargar.place(x=25, y=20)
 # botonCargar.config(font=("Courier", 12), bg="#0A1246",fg="white",width=15)
 
-# #Botón 2
-# botonAnalizar = tk.Button(text="Analizar", command=analizarTexto)
-# botonAnalizar.place(x=25, y=350)
-# botonAnalizar.config(font=("Courier", 12), bg="#0A1246",fg="white",width=10)
-
 #---------------------------- Botones menú -----------------------------------------
 #Botón 1
 botonReporteErrores = tk.Button(text="Reporte de errores")
@@ -255,7 +241,7 @@ botonReporteErrores.place(x=780, y=25)
 botonReporteErrores.config(font=("Courier", 12), bg="#0A1246",fg="white",width=23)
 
 #Botón 1
-botonLimpiarErrores = tk.Button(text="Limpiar log de errores")
+botonLimpiarErrores = tk.Button(text="Limpiar log de errores",command=data.limpiarLogErrores)
 botonLimpiarErrores.place(x=780, y=65)
 botonLimpiarErrores.config(font=("Courier", 12), bg="#0A1246",fg="white",width=23)
 
@@ -265,7 +251,7 @@ botonReporteTokens.place(x=780, y=105)
 botonReporteTokens.config(font=("Courier", 12), bg="#0A1246",fg="white",width=23)
 
 #Botón 4
-botonLimpiarTokens = tk.Button(text="Limpiar log de tokens")
+botonLimpiarTokens = tk.Button(text="Limpiar log de tokens",command=data.limpiarLogTokens)
 botonLimpiarTokens.place(x=780, y=145)
 botonLimpiarTokens.config(font=("Courier", 12), bg="#0A1246",fg="white",width=23)
 
@@ -285,21 +271,9 @@ botonSalir.place(x=780, y=265)
 botonSalir.config(font=("Courier", 12), bg="#0A1246",fg="white",width=23)
 
 #Botón 8
-botonEnviar = tk.Button(text="Enviar", command=mostrarDatos)
+botonEnviar = tk.Button(text="Enviar", command=analizarTexto)
 botonEnviar.place(x=765, y=600)
 botonEnviar.config(font=("Courier", 8), bg="#0A1246",fg="white",width=10)
-
-#lista de Reportes
-# listaReportes = ttk.Combobox(root, width="17",state="readonly")
-# listaReportes.place(x=500, y=20)
-
-# reportes = ['Reporte de errores', 'Reporte de tokens','Manual de usuario','Manual técnico']
-# listaReportes['values'] = reportes
-
-#Botón 3
-# botonAceptar = tk.Button(text="Aceptar", command=verReportes)
-# botonAceptar.place(x=630, y=18)
-# botonAceptar.config(font=("Courier", 10), bg="#0A1246",fg="white",width=6)
 
 #------------------------- Area de texto ----------------------------------------
 txt = stxt.ScrolledText(root,width=90, height=35)
