@@ -1,7 +1,5 @@
 
 import os as documento
-
-from click import command
 from listas import lista
 import tkinter as tk
 from tkinter import *
@@ -64,8 +62,7 @@ def analizarTexto():  #Analizador léxico
     estado = 0 #Estado inicial
     lexema = ""
     contadorDigitos = 0 #----> número: 2, año: 4
-    verifador1 = False
-
+   
     while x < len(t):
         if estado == 0:
             if t[x] == " ": #No se analiza espacio
@@ -199,12 +196,8 @@ def verificaPalabrasReservadas(lexema,fila,columna): #Método que verifica las p
         data.insertarToken("Token ID",lexema,fila,columna)
 
 def verReportes():
-    op = listaReportes.get()
-    if op =="Reporte de tokens":
-        data.reporteTokens()
-    elif op =="Reporte de errores":
-        data.reporteErrores()
-    elif op =="Manual de usuario":
+    op = ""
+    if op =="Manual de usuario":
         path = documento.path.dirname(documento.path.abspath(__file__))+ "\Documentación\Manual de Usuario.pdf"
         webbrowser.open_new(path)
     elif op =="Manual técnico":
@@ -236,7 +229,7 @@ root.eval('tk::PlaceWindow . center')
 
 #---------------------------- Botones menú -----------------------------------------
 #Botón 1
-botonReporteErrores = tk.Button(text="Reporte de errores")
+botonReporteErrores = tk.Button(text="Reporte de errores", command=data.reporteErrores)
 botonReporteErrores.place(x=780, y=25)
 botonReporteErrores.config(font=("Courier", 12), bg="#0A1246",fg="white",width=23)
 
@@ -246,7 +239,7 @@ botonLimpiarErrores.place(x=780, y=65)
 botonLimpiarErrores.config(font=("Courier", 12), bg="#0A1246",fg="white",width=23)
 
 #Botón 3
-botonReporteTokens = tk.Button(text="Reporte de Tokens")
+botonReporteTokens = tk.Button(text="Reporte de Tokens",command=data.reporteTokens)
 botonReporteTokens.place(x=780, y=105)
 botonReporteTokens.config(font=("Courier", 12), bg="#0A1246",fg="white",width=23)
 
