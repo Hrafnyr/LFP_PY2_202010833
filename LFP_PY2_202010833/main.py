@@ -8,38 +8,21 @@ from tkinter import scrolledtext as stxt
 from tkinter import filedialog
 from tkinter import messagebox as MessageBox
 import webbrowser
-
+import pandas as pd
 
 data = lista()
 
+def obtenerCSV():
+    path = documento.path.dirname(documento.path.abspath(__file__))+ "\LaLigaBot.csv"
 
-def abrirDocumentoForm():
-    Tk().withdraw() #Remover ventana
-    archivo1 = filedialog.askopenfile(       #Abrir ventana
-        title = "Seleccione un archivo",   #Información solicitada
-        initialdir = "./",
-        filetypes = [
-            ("Archivos .form", "*.form"),
-            ("Archivos .lfp", "*.lfp"),
-            ("Todos los archivos",  "*.*")
-        ]
-    )
-
-    if archivo1 is None:  #Verifica que si existe selección de archivos
-        MessageBox.showinfo('Atención','No se seleccionó ningún archivo')
-        return None
-    else:
-        ruta = archivo1.name #Obtener ruta
-        t = open(ruta, 'r',encoding='utf-8')  #Si se seleccionó, leer el archivo y cerrarlo
-        texto = t.read()
-        mostrarDatos(texto)
-        t.close()
-        return texto
-
+    df = pd.read_csv(path)
+    print (df.values)
+    
 def mostrarDatos():
     #txt.delete("1.0", "end")
 
     texto = cajaEnvio.get() + "\n" #Obtiene el dato de envío
+   
     txt.config(state='normal') #Habilita la edicion del scrolledtext
     txt.tag_configure("tag_name", justify='right')
     txt.insert(INSERT,texto) #insertar texto en el scrolledtext
@@ -116,19 +99,19 @@ def analizarTexto():  #Analizador léxico
         elif estado == 2: #Estado de símbolos
             if t[x] == "<":
                 lexema=t[x]
-                data.insertarToken("Token símbolo menor que",lexema,fila,columna)
+                data.insertarToken("tk_Smayor",lexema,fila,columna)
                 x+=1
                 columna +=1
                 estado = 2
             elif t[x]==">":
                 lexema=t[x]
-                data.insertarToken("Token símbolo mayor que",lexema,fila,columna)
+                data.insertarToken("tk_Smenor",lexema,fila,columna)
                 x+=1
                 columna +=1
                 estado = 2
             elif t[x]=="-":
                 lexema=t[x]
-                data.insertarToken("Token símbolo guión",lexema,fila,columna)
+                data.insertarToken("tk_guion",lexema,fila,columna)
                 x+=1
                 columna +=1          
                 estado = 2
@@ -140,7 +123,7 @@ def analizarTexto():  #Analizador léxico
             else:
                 inicio = columna - len(lexema)
                 if lexema == "-f" or lexema == "-ji" or lexema == "-jf" or lexema == "-n":
-                    label = "Palabra reservada {}".format(lexema)
+                    label = "tk_{}".format(lexema)
                     data.insertarToken(label,lexema,fila,inicio) 
                 estado = 0
 
@@ -152,7 +135,7 @@ def analizarTexto():  #Analizador léxico
                 estado = 3       
             else:
                 inicio = columna - len(lexema)   
-                data.insertarToken("Token cadena comilla doble",lexema,fila,inicio)
+                data.insertarToken("tk_cadena",lexema,fila,inicio)
                 x+=1
                 columna +=1
                 estado = 0
@@ -168,11 +151,11 @@ def analizarTexto():  #Analizador léxico
             else:
                 inicio = columna - len(lexema)
                 if contadorDigitos == 4:
-                    data.insertarToken("Token año",lexema,fila,inicio)
+                    data.insertarToken("tk_año",lexema,fila,inicio)
                 elif contadorDigitos > 0 and contadorDigitos <= 2:
-                    data.insertarToken("Token número",lexema,fila,inicio)            
+                    data.insertarToken("tk_num",lexema,fila,inicio)            
                 else:
-                    data.insertarToken("Token dígito",lexema,fila,inicio)
+                    data.insertarToken("tk_digito",lexema,fila,inicio)
                 
                 contadorDigitos = 0
                 estado = 0
@@ -188,12 +171,12 @@ def verificaPalabrasReservadas(lexema,fila,columna): #Método que verifica las p
     encontrado = False
     for x in palabras_Reservadas:
         if x == lexema:
-            label = "Token palabra reservada {}".format(x)
+            label = "tk_{}".format(x.lower())
             data.insertarToken(label,lexema,fila,columna)
             encontrado = True
          
     if encontrado == False:
-        data.insertarToken("Token ID",lexema,fila,columna)
+        data.insertarToken("tk_id",lexema,fila,columna)
 
 def verReportes():
     op = ""
@@ -210,7 +193,6 @@ def verHtml():
     t = True
     if t:
         data.crearHtml()
-
 
 #------------------------------Interfaz gráfica-------------------------------------
 
@@ -264,7 +246,7 @@ botonSalir.place(x=780, y=265)
 botonSalir.config(font=("Courier", 12), bg="#0A1246",fg="white",width=23)
 
 #Botón 8
-botonEnviar = tk.Button(text="Enviar", command=analizarTexto)
+botonEnviar = tk.Button(text="Enviar", command=analizarTexto) 
 botonEnviar.place(x=765, y=600)
 botonEnviar.config(font=("Courier", 8), bg="#0A1246",fg="white",width=10)
 
