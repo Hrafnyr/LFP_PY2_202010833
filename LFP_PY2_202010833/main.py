@@ -99,13 +99,13 @@ def analizarTexto():  #Analizador léxico
         elif estado == 2: #Estado de símbolos
             if t[x] == "<":
                 lexema=t[x]
-                data.insertarToken("tk_Smayor",lexema,fila,columna)
+                data.insertarToken("tk_Smenor",lexema,fila,columna)
                 x+=1
                 columna +=1
                 estado = 2
             elif t[x]==">":
                 lexema=t[x]
-                data.insertarToken("tk_Smenor",lexema,fila,columna)
+                data.insertarToken("tk_Smayor",lexema,fila,columna)
                 x+=1
                 columna +=1
                 estado = 2
