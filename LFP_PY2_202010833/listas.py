@@ -221,7 +221,6 @@ class sintantico():
                 print(s)
 
     #----- Inicio del analizador sintáctico con base a la gramática establecidad en la documentacion ---------
-    
     #<INICIO> ::= <RESULTADO_PARTIDO> | <JORNADA> | <GOLES> | <T_TEMPORADA> | <PARTIDOS> | <TOP> | <ADIOS>
     def inicio(self):
 
@@ -239,13 +238,17 @@ class sintantico():
             r = self.jornada()
             return r
         elif tmp[0] == "tk_goles":
-            self.goles()
+            r = self.goles()
+            return r
         elif tmp[0] == "tk_tabla":
-            self.t_Temporada()
+            r = self.t_Temporada()
+            return r
         elif tmp[0] == "tk_partidos":
-            self.partidos()
+            r = self.partidos()
+            return r
         elif tmp[0] == "tk_top":
-            self.top()
+            r = self.top()
+            return r
         elif tmp[0] == "tk_adios":
             r = self.adios()
             return r
@@ -510,7 +513,10 @@ class sintantico():
 
     #---> se espera tk_goles        
     def goles(self):
+        equipo = None
         condicion = None
+        año1 = None
+        año2 = None
 
         tk = self.quitarToken()
         if tk[0] == "tk_goles":
@@ -531,7 +537,7 @@ class sintantico():
                     return #Si no viene entonces ya no se ejecuta lo demás
                 
                 elif tk[0] == "tk_cadena":
-                
+                    equipo = tk[1]
                     #---> se espera tk_temporada
                     tk = self.quitarToken()
                     if tk is None:
@@ -552,7 +558,7 @@ class sintantico():
                                 self.insertErrorS("Null","Se esperaba un año",11,0)
                                 return #Si no viene entonces ya no se ejecuta lo demás
                             elif tk[0] == "tk_año":
-
+                                año1 = tk[1]
                                 #---> se espera tk_guion
                                 tk = self.quitarToken()
                                 if tk is None:
@@ -566,7 +572,7 @@ class sintantico():
                                         self.insertErrorS("Null","Se esperaba un año",11,0)
                                         return #Si no viene entonces ya no se ejecuta lo demás
                                     elif tk[0] == "tk_año":
-
+                                        año2 = tk[1]
                                         #---> se espera tk_Smayor
                                         tk = self.quitarToken()
                                         if tk is None:
@@ -575,7 +581,10 @@ class sintantico():
                                         elif tk[0] == "tk_Smayor":
                                             
                                             #Funcionalidad
-                                            print("PROCESO CORRECTO")
+                                            print("Todo correcto")
+                                            print("procesando...")
+                                            res = self.golesCSV(equipo,año1,año2,condicion)
+                                            return res
 
                                         else:
                                             label = "Error: {}".format(tk[1])
@@ -629,6 +638,8 @@ class sintantico():
 
     #--> Se espera tk_tabla
     def t_Temporada(self):
+        año1 = None
+        año2 = None
         asignar_nombre = None
 
         tk = self.quitarToken()
@@ -654,7 +665,7 @@ class sintantico():
                         self.insertErrorS("Null","Se esperaba un año",11,0)
                         return #Si no viene entonces ya no se ejecuta lo demás
                     elif tk[0] == "tk_año":
-
+                        año1 = tk[1]
                         #---> se espera tk_guion
                         tk = self.quitarToken()
                         if tk is None:
@@ -668,7 +679,7 @@ class sintantico():
                                 self.insertErrorS("Null","Se esperaba un año",11,0)
                                 return #Si no viene entonces ya no se ejecuta lo demás
                             elif tk[0] == "tk_año":
-
+                                año2 = tk[1]
                                 #---> se espera tk_Smayor
                                 tk = self.quitarToken()
                                 if tk is None:
@@ -680,9 +691,14 @@ class sintantico():
                                     #Se llama la función
                                     asignar_nombre = self.asignarNombre()
                                     if asignar_nombre is None:
-                                        print("Agregando nombre por defecto: temporada.html")
+                                        asignar_nombre = "temporada.html"
+                                        print("Agregando nombre por defecto:",asignar_nombre)
                                     else:
                                         print("El nombre de asignación es:", asignar_nombre)
+
+                                    #Funcionalidad
+                                    res = self.tablaTemp(año1,año2,asignar_nombre)
+                                    return res
 
                                 else:
                                     label = "Error: {}".format(tk[1])
@@ -1074,6 +1090,8 @@ class sintantico():
     def limpiarError(self):
         del self.errores [:]
 
+    #--------------------- Funciones con CSV para mostrar resultados ---------------------
+
     def resultadoCSV(self,equipo1,equipo2, año1, año2):
 
         path = documento.path.dirname(documento.path.abspath(__file__))+ "\LaLigaBot.csv" #Ruta
@@ -1119,7 +1137,7 @@ class sintantico():
 
             html_parte1 = '''
             <body style="background-color:#F4F8F4;">
-            <h2 style="text-align: center;">"Reporte de Tokens"</h2>
+            <h2 style="text-align: center;">"Reporte de jornada"</h2>
             <table style="width: 50%; border-collapse: collapse; border-style: solid; margin: 0 auto;" border="1">
             <tbody>
             <tr>
@@ -1166,3 +1184,152 @@ class sintantico():
             show = "Generando archivo de resultados jornada {} temporada {} - {}".format(jNum,año1,año2) + "\n"
             print(show)
             return show
+    
+    def golesCSV(self,equipo,año1,año2,condicion):
+        
+        path = documento.path.dirname(documento.path.abspath(__file__))+ "\LaLigaBot.csv" #Ruta
+        df = pd.read_csv(path) #Lectura
+        
+        df.values [0][0]
+        
+        datos = pd.DataFrame(df, columns = ['Temporada', 'Equipo1', 'Equipo2', 'Goles1', 'Goles2'])
+        
+        golesT = 0
+
+        if condicion == 'LOCAL':
+
+            golesT = datos.loc[(datos['Temporada'] == '{0}-{1}'.format(año1, año2)) & (datos['Equipo1'] == equipo)].groupby('Equipo1')['Goles1'].sum().head().values
+       
+        elif condicion == 'VISITANTE':
+
+            golesT = datos.loc[(datos['Temporada'] == '{0}-{1}'.format(año1, año2)) & (datos['Equipo2'] == equipo)].groupby('Equipo2')['Goles2'].sum().head().values
+        
+        elif condicion == 'TOTAL':
+            local = datos.loc[(datos['Temporada'] == '{0}-{1}'.format(año1, año2)) & (datos['Equipo1'] == equipo)].groupby('Equipo1')['Goles1'].sum().head().values
+            visita = datos.loc[(datos['Temporada'] == '{0}-{1}'.format(año1, año2)) & (datos['Equipo2'] == equipo)].groupby('Equipo2')['Goles2'].sum().head().values
+            golesT = local + visita
+        
+        if len(golesT) == 0:
+            print("No se encontró en la base de datos")
+            show = "No se encontró en la base de datos" + "\n"
+            return show
+        
+        else:
+            show = "Los goles anotados del equipo {} en {} del la temporada {}-{} fueron {}".format(equipo,condicion,año1,año2, golesT) + "\n"
+            print(show)
+            return show
+
+    def tablaTemp(self,año1,año2,nombre):
+        arregloDePuntos = []
+        arregloEquiposAnalizados = []
+        path = documento.path.dirname(documento.path.abspath(__file__))+ "\LaLigaBot.csv" #Ruta
+        df = pd.read_csv(path) #Lectura
+        
+        df.values [0][0]
+        
+        datos = pd.DataFrame(df, columns = ['Temporada','Equipo1', 'Equipo2', 'Goles1', 'Goles2']) #Columnas a mostrar
+        
+        # Obtiene el arreglo de temporada
+        arregloEquipos = datos.loc[(datos['Temporada'] == '{0}-{1}'.format(año1, año2))].values 
+        
+        if len(arregloEquipos) == 0:
+            print("No se encontró en la base de datos")
+            show = "No se encontró en la base de datos" + "\n"
+            return show
+        else:
+            #Recorro por equipos para tener la lista de equipos
+            for equipo in arregloEquipos:
+
+                if equipo[1] in arregloEquiposAnalizados: #Si está paso, si no entonces lo agrego al arreglo
+                    pass
+                else: arregloEquiposAnalizados.append(equipo[1])  
+
+            #Una vez teniendo el arreglo de equipos que jugaron se procede a buscar en el csv y validar puntos
+            for equipo_1 in arregloEquiposAnalizados:
+
+                # Obtiene el arreglo con los datos donde el equipo fue local
+                aux = datos.loc[(datos['Temporada'] == '{0}-{1}'.format(año1, año2)) & (datos['Equipo1'] == equipo_1)].values
+                
+                #Teniendo el arreglo local completo entonces se recorre para la verificacion de puntos
+                contadorPuntos = 0
+        
+                for golL in aux:
+        
+                    gol1 = golL[3] #Se obtienen los goles -> gol1 es goles del equipo analizado
+                    gol2 = golL[4]
+
+                    #Pasando a int:
+                    g1 = int(gol1)
+                    g2 = int(gol2)
+
+                    if g1 > g2: #Si ganó
+                        contadorPuntos+=3
+                    elif g1 == g2: #Si empató
+                        contadorPuntos+=1
+
+                #Ahora con el arreglo de visitante
+                aux = datos.loc[(datos['Temporada'] == '{0}-{1}'.format(año1, año2)) & (datos['Equipo2'] == equipo_1)].values
+
+                #Teniendo el arreglo visitante completo entonces se recorre para la verificacion de puntos
+                for golV in aux:
+
+                    gol1 = golV[3] 
+                    gol2 = golV[4] #Se obtienen los goles -> gol2 es goles del equipo analizado
+
+                    #Pasando a int:
+                    g1 = int(gol1)
+                    g2 = int(gol2)
+
+                    if g2 > g1: #Si ganó
+                        contadorPuntos+=3
+                    elif g2 == g1: #Si empató
+                        contadorPuntos+=1
+                
+                arregloDePuntos.append(contadorPuntos) #Se agregan los puntos obtenidos por el equipo
+
+                #----- Aquí termina la ejecución de 1 equipo, regresa para el siguiente y el proceso continua
+
+            print(arregloEquiposAnalizados)
+            print(arregloDePuntos)
+            #Se espera obtener 2 arreglos, equipos y puntos, cada indice corresponde a equipo y puntos respectivos
+            
+            #Generacion del html:
+            reporte_J = open(nombre, 'w')
+
+            html_parte1 = '''
+            <body style="background-color:#F4F8F4;">
+            <h2 style="text-align: center;">"Tabla de temporada"</h2>
+            <table style="width: 50%; border-collapse: collapse; border-style: solid; margin: 0 auto;" border="1">
+            <tbody>
+            <tr>
+            <td style="width: 2%; text-align: center; border-style: solid; border-color: black; background-color: midnightblue;"><strong><span style="color: #ffffff;">Equipo</span></strong></td>
+            <td style="width: 5%; text-align: center; border-style: solid; border-color: black; background-color: midnightblue;"><strong><span style="color: #ffffff;">Puntos</span></strong></td>
+            </tr>'''
+
+            html_parte2 = ''
+     
+            for i in range(len(arregloEquiposAnalizados)): #Como debería tener la misma longitud los equipos y puntos se elige cualquiera
+                v_equipo = arregloEquiposAnalizados[i]
+                v_puntos   = arregloDePuntos[i]
+
+                html_parte2 += '''<tr>
+            <td style="width: 2%; text-align: left; border-style: solid; border-color: black; background-color: #F4F8F4;">{}</td>
+            <td style="width: 5%; text-align: center; border-style: solid; border-color: black; background-color: #F4F8F4;">{}</td>
+            </tr>'''.format(v_equipo,v_puntos)
+                
+            hmtl_fin = '''
+            </tbody>
+            </table> </body>'''
+
+            html_archivo = html_parte1 + html_parte2 + hmtl_fin
+
+            reporte_J.write(html_archivo)
+            reporte_J.close()
+
+            print('Reporte creado con éxito')
+            webbrowser.open_new_tab(nombre)
+
+            show = "Generando archivo de clasificación de temporada {} - {}".format(año1,año2) + "\n"
+            print(show)
+            return show
+        
