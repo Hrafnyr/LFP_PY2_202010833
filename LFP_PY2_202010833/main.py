@@ -1,4 +1,5 @@
 
+from cgitb import reset
 import os as documento
 from listas import lista
 import tkinter as tk
@@ -34,6 +35,17 @@ def mostrarDatos():
     #data.botonEvento(texto)
     
     return texto
+
+def respuestaDatos(respuesta):
+    
+    txt.config(state='normal') #Habilita la edicion del scrolledtext
+    txt.tag_configure("tag_res", justify='left') #Alineación a la izquierda
+    txt.insert(INSERT,respuesta,"tag_res") #insertar texto en el scrolledtext
+    txt.config(state=DISABLED) #Modo lectura del scrolledtext
+
+    if respuesta == "Adios, vuelve pronto :)":
+        MessageBox.showerror('Atención','Se cerrará el programa')
+        exit()
 
 def analizarTexto():  #Analizador léxico
     #data.botonEvento(t)
@@ -164,7 +176,8 @@ def analizarTexto():  #Analizador léxico
     data.mostrarErrores()
 
     print('Tokens:')
-    data.mostrarTokens()
+    respuesta = data.mostrarTokens()
+    respuestaDatos(respuesta)
 
 def verificaPalabrasReservadas(lexema,fila,columna): #Método que verifica las palabras reservadas
     palabras_Reservadas = ["RESULTADO", "VS","TEMPORADA", "JORNADA","-f","GOLES","LOCAL","VISITANTE","TOTAL","TABLA","PARTIDOS", "-ji", "-jf","TOP","SUPERIOR","INFERIOR","-n","ADIOS"]
@@ -196,7 +209,8 @@ def verHtml():
 
 #------------------------------Interfaz gráfica-------------------------------------
 
-root = tk.Tk()                 #Raiz           
+#Raiz
+root = tk.Tk()           
 #Configuración Raiz
 root.title('La Liga Bot')      
 root.geometry('1050x675')
@@ -253,6 +267,7 @@ botonEnviar.config(font=("Courier", 8), bg="#0A1246",fg="white",width=10)
 #------------------------- Area de texto ----------------------------------------
 txt = stxt.ScrolledText(root,width=90, height=35)
 txt.place(x=15, y=25)
+txt.config(state=DISABLED) #Modo lectura del scrolledtext
 
 cajaEnvio = ttk.Entry(width=120)
 cajaEnvio.place(x=15, y=600)

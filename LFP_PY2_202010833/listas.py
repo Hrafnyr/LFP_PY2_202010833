@@ -1,14 +1,18 @@
 
 from guardarToken import token1
+import os as documento
 from errores import error
+from erroresSi import errorS
 from tkinter import messagebox as MessageBox
 import webbrowser
+import pandas as pd
 
 class lista():
     def __init__(self):
         self.listaTokens = [] #lista que guarda los tokens
         self.listaErrores = [] #lista que guarda los errores
         self.contadorReportes = 1
+        self.controlTokens = 0 #Permite el múltiple análisis sintactico sin limpiar datos
 
     def insertarToken(self, token,valor,fila,columna):
         self.listaTokens.append(token1(token,valor,fila,columna))
@@ -22,14 +26,29 @@ class lista():
             print('No hay tokens aún')
             MessageBox.showinfo('Mensaje','No hay tokens para mostrar')
         else:
+            datos = sintantico()
+            datos.limpiar()
             aux = []
+            aux2 = 0
             for i in self.listaTokens:
+               
                 r =i.enviarTokens()
                 print(r)
-                aux.append(r)
-            datos = sintantico()
+
+                if self.controlTokens == 0:
+                    self.controlTokens+=1
+                    aux.append(r) 
+                elif self.controlTokens > 0:
+                    if aux2 >= self.controlTokens:
+                        self.controlTokens+=1
+                        aux.append(r)
+                
+                aux2 += 1
+
+
             datos.insert(aux)
-            datos.inicio()
+            respuesta = datos.inicio()
+            return respuesta
 
     def mostrarErrores(self): #Metodo de prueba para verificar el correcto guardado de los errores
         i:error
@@ -37,13 +56,16 @@ class lista():
             print('No hay errores')
             MessageBox.showinfo('Mensaje','No hay errores')
         else:
+
             MessageBox.showerror('Atención','Se encontraron errores')
             for i in self.listaErrores:
                 s = i.enviarErrores()
                 print(s)
            
     def limpiarLogErrores(self):
+        data= sintantico()
         del self.listaErrores[:]
+        data.limpiarError()
         print("Vaciando...")
         MessageBox.showinfo('Mensaje','Errores eliminados correctamente')
 
@@ -165,12 +187,13 @@ class sintantico():
         self.tokensS = []
         self.errores = []
         self.columna = 0
+        self.contador = 0
 
     def insert(self,lista):
         self.tokensS.extend(lista)
 
     def insertErrorS(self, caracter,tipo,fila,columna):
-        self.errores.append(error(caracter,tipo,fila,columna))   
+        self.errores.append(errorS(caracter,tipo,fila,columna))  
 
     def quitarToken(self):
         #Sacar el primer token de la lista
@@ -187,7 +210,7 @@ class sintantico():
             return None
 
     def showError(self): #Metodo de prueba para verificar el correcto guardado de los errores
-        i:error
+        i:errorS
         if len(self.errores)==0:
             print('No hay errores Sintácticos')
             #MessageBox.showinfo('Mensaje','No hay errores')
@@ -207,10 +230,14 @@ class sintantico():
 
         if tmp is None:
             self.insertErrorS("Null","Se esperaba: RESULTADO, JORNADA,GOLES,TABLA, PARTIDOS, TOP O ADIOS",1,0)
+            r = "Se esperaba: RESULTADO,JORNADA,GOLES,TABLA, PARTIDOS, TOP O ADIOS" + "\n"
+            return r
         elif tmp[0] == "tk_resultado":
-            self.resultadoPartido()
+            r = self.resultadoPartido()
+            return r
         elif tmp[0] == "tk_jornada":
-            self.jornada()
+            r = self.jornada()
+            return r
         elif tmp[0] == "tk_goles":
             self.goles()
         elif tmp[0] == "tk_tabla":
@@ -220,15 +247,21 @@ class sintantico():
         elif tmp[0] == "tk_top":
             self.top()
         elif tmp[0] == "tk_adios":
-            self.adios()
+            r = self.adios()
+            return r
         else:
             label = "Error: {}".format(tmp[1])
+            txt = "Se esperaba: RESULTADO,JORNADA,GOLES,TABLA, PARTIDOS, TOP O ADIOS" + "\n"
             self.insertErrorS(label,"Se esperaba: RESULTADO,JORNADA,GOLES,TABLA, PARTIDOS, TOP O ADIOS",1,0)
-        
-        self.showError()
+            return txt
 
     #--> se espera tk_resultado
     def resultadoPartido(self):
+        equipo1 = None
+        equipo2 = None
+        año1 = None
+        año2 = None
+
         tk = self.quitarToken()
         if tk[0] == "tk_resultado":
             
@@ -239,7 +272,7 @@ class sintantico():
                 return #Si no viene entonces ya no se ejecuta lo demás
             
             elif tk[0] == "tk_cadena":
-               
+                equipo1 = tk[1]
                 #---> se espera tk_vs
                 tk = self.quitarToken()
                 if tk is None:
@@ -253,7 +286,7 @@ class sintantico():
                         self.insertErrorS("Null","Se esperaba una cadena",11,0)
                         return #Si no viene entonces ya no se ejecuta lo demás
                     elif tk[0] == "tk_cadena":
-                        
+                        equipo2 = tk[1]
                         #---> se espera tk_temporada
                         tk = self.quitarToken()
                         if tk is None:
@@ -274,7 +307,7 @@ class sintantico():
                                     self.insertErrorS("Null","Se esperaba un año",11,0)
                                     return #Si no viene entonces ya no se ejecuta lo demás
                                 elif tk[0] == "tk_año":
-
+                                    año1 = tk[1]
                                     #---> se espera tk_guion
                                     tk = self.quitarToken()
                                     if tk is None:
@@ -288,7 +321,7 @@ class sintantico():
                                             self.insertErrorS("Null","Se esperaba un año",11,0)
                                             return #Si no viene entonces ya no se ejecuta lo demás
                                         elif tk[0] == "tk_año":
-
+                                            año2 = tk[1]
                                             #---> se espera tk_Smayor
                                             tk = self.quitarToken()
                                             if tk is None:
@@ -297,16 +330,18 @@ class sintantico():
                                             elif tk[0] == "tk_Smayor":
                                                 
                                                 #Funcionalidad a realizar
-                                                print("todo correcto")   
+                                                print("Todo correcto")
+                                                print("procesando...")
 
+                                                dataR = self.resultadoCSV(equipo1,equipo2,año1,año2)   
+                                                return dataR
 
                                             else:
                                                 label = "Error: {}".format(tk[1])
                                                 self.insertErrorS(label,"Se esperaba un >",11,0)
                                         else:
                                             label = "Error: {}".format(tk[1])
-                                            self.insertErrorS(label,"Se esperaba un año",11,0)
-                                            
+                                            self.insertErrorS(label,"Se esperaba un año",11,0)                                            
                                     else:
                                         label = "Error: {}".format(tk[1])
                                         self.insertErrorS(label,"Se esperaba un -",11,0)
@@ -333,7 +368,9 @@ class sintantico():
 
     #--> se espera tk_jornada
     def jornada(self):
-
+        numJornada = None
+        año1 = None
+        año2 = None
         asignar_nombre = None
 
         tk = self.quitarToken()
@@ -346,14 +383,13 @@ class sintantico():
                 return #Si no viene entonces ya no se ejecuta lo demás
             
             elif tk[0] == "tk_num":
-               
+                numJornada = tk[1]
                 #---> se espera tk_temporada
                 tk = self.quitarToken()
                 if tk is None:
                     self.insertErrorS("Null","Se esperaba TEMPORADA",11,0)
                     return #Si no viene entonces ya no se ejecuta lo demás
                 elif tk[0] == "tk_temporada":
-
                             
                     #---> se espera tk_Smenor
                     tk = self.quitarToken()
@@ -368,7 +404,7 @@ class sintantico():
                             self.insertErrorS("Null","Se esperaba un año",11,0)
                             return #Si no viene entonces ya no se ejecuta lo demás
                         elif tk[0] == "tk_año":
-
+                            año1 = tk[1]
                             #---> se espera tk_guion
                             tk = self.quitarToken()
                             if tk is None:
@@ -382,7 +418,7 @@ class sintantico():
                                     self.insertErrorS("Null","Se esperaba un año",11,0)
                                     return #Si no viene entonces ya no se ejecuta lo demás
                                 elif tk[0] == "tk_año":
-
+                                    año2 = tk[1]
                                     #---> se espera tk_Smayor
                                     tk = self.quitarToken()
                                     if tk is None:
@@ -393,18 +429,23 @@ class sintantico():
                                         #Se espera ---> <ASIGNAR_NOMBRE>
                                         #Se llama la función
                                         asignar_nombre = self.asignarNombre()
-                                        if asignar_nombre is None:
+                                        if asignar_nombre is None: #Si es none entonces no viene esa bandera
+                                            asignar_nombre = "jornada.html"
                                             print("Agregando nombre por defecto: jornada.html")
                                         else:
+                                            asignar_nombre = asignar_nombre+".html"
                                             print("El nombre de asignación es:", asignar_nombre)
+
+                                        print(numJornada,año1,año2,asignar_nombre)
+                                        resp = self.jornadaCSV(numJornada,año1,año2,asignar_nombre)
+                                        return resp
 
                                     else:
                                         label = "Error: {}".format(tk[1])
                                         self.insertErrorS(label,"Se esperaba un >",11,0)
                                 else:
                                     label = "Error: {}".format(tk[1])
-                                    self.insertErrorS(label,"Se esperaba un año",11,0)
-                                    
+                                    self.insertErrorS(label,"Se esperaba un año",11,0)                                  
                             else:
                                 label = "Error: {}".format(tk[1])
                                 self.insertErrorS(label,"Se esperaba un -",11,0)
@@ -458,6 +499,7 @@ class sintantico():
                         #Funcionalidad
                         print("El nombre es: ",tk[1])
                         return tk[1]
+
                     else:
                         label = "Error: {}".format(tk[1])
                         self.insertErrorS(label,"Se esperaba -f",11,0)
@@ -834,7 +876,7 @@ class sintantico():
             
             elif tk[0] == "tk_guion":
                 
-                #---> se espera -f
+                #---> se espera -jf
                 tk = self.quitarToken()
                 if tk is None:
                     self.insertErrorS("Null","Se esperaba -jf",11,0)
@@ -1012,7 +1054,7 @@ class sintantico():
                         return tk[1]
                     else:
                         label = "Error: {}".format(tk[1])
-                        self.insertErrorS(label,"Se esperaba num",11,0)
+                        self.insertErrorS(label,"Se esperaba un número de 1 o 2 dígitos positivo",11,0)
                 else: 
                     return None #Si no lo encuentra entonces devuelve None para simular el épsilon
             else:
@@ -1023,7 +1065,104 @@ class sintantico():
         tk = self.quitarToken()
 
         if tk[0] == "tk_adios":
-            exit()
+            message = "Adios, vuelve pronto :)"
+            return message
 
+    def limpiar(self):
+        del self.tokensS [:]
+           
+    def limpiarError(self):
+        del self.errores [:]
 
+    def resultadoCSV(self,equipo1,equipo2, año1, año2):
 
+        path = documento.path.dirname(documento.path.abspath(__file__))+ "\LaLigaBot.csv" #Ruta
+        df = pd.read_csv(path) #Lectura
+        
+        df.values [0][0]
+        
+        datos = pd.DataFrame(df, columns = ['Temporada', 'Equipo1', 'Equipo2', 'Goles1', 'Goles2'])
+        res = datos.loc[(datos['Temporada'] == '{0}-{1}'.format(año1, año2)) & (datos['Equipo1'] == equipo1) & (datos['Equipo2'] == equipo2)].values
+        
+        if len(res) ==0:
+            print("No se encontró en la base de datos")
+            show = "No se encontró en la base de datos" + "\n"
+            return show
+        
+        else:
+            print(datos.loc[(datos['Temporada'] == '{0}-{1}'.format(año1, año2)) & (datos['Equipo1'] == equipo1) & (datos['Equipo2'] == equipo2)].values)
+
+            show = "El resultado de este partido fue: {} {} - {} {}".format(equipo1,res[0][3],equipo2,res[0][4]) + "\n"
+            print(show)
+            return show
+    
+    def jornadaCSV(self,jNum,año1,año2,nombre):
+        numJ = int(jNum)
+        path = documento.path.dirname(documento.path.abspath(__file__))+ "\LaLigaBot.csv" #Ruta
+        df = pd.read_csv(path) #Lectura
+        
+        df.values [0][0]
+        
+        datos = pd.DataFrame(df, columns = ['Temporada', 'Jornada' ,'Equipo1', 'Equipo2', 'Goles1', 'Goles2'])
+        res = datos.loc[(datos['Temporada'] == '{0}-{1}'.format(año1, año2)) & (datos['Jornada'] == numJ)].values
+        
+        print(res)       
+        if len(res) ==0:
+            print("No se encontró en la base de datos")
+            show = "No se encontró en la base de datos" + "\n"
+            return show
+        
+        else:
+            
+            #Generacion del html:
+            reporte_J = open(nombre, 'w')
+
+            html_parte1 = '''
+            <body style="background-color:#F4F8F4;">
+            <h2 style="text-align: center;">"Reporte de Tokens"</h2>
+            <table style="width: 50%; border-collapse: collapse; border-style: solid; margin: 0 auto;" border="1">
+            <tbody>
+            <tr>
+            <td style="width: 2%; text-align: center; border-style: solid; border-color: black; background-color: midnightblue;"><strong><span style="color: #ffffff;">Temporada</span></strong></td>
+            <td style="width: 5%; text-align: center; border-style: solid; border-color: black; background-color: midnightblue;"><strong><span style="color: #ffffff;">Jornada</span></strong></td>
+            <td style="width: 5%; text-align: center; border-style: solid; border-color: black; background-color: midnightblue;"><strong><span style="color: #ffffff;">Equipo 1</span></strong></td>
+            <td style="width: 2%; text-align: center; border-style: solid; border-color: black; background-color: midnightblue;"><strong><span style="color: #ffffff;">Equipo 2</span></strong></td>
+            <td style="width: 2%; text-align: center; border-style: solid; border-color: black; background-color: midnightblue;"><strong><span style="color: #ffffff;">Goles 1</span></strong></td>
+            <td style="width: 2%; text-align: center; border-style: solid; border-color: black; background-color: midnightblue;"><strong><span style="color: #ffffff;">Goles 2</span></strong></td>
+            </tr>'''
+
+            html_parte2 = ''
+     
+            for i in res:
+                v_Temporada = i[0]
+                v_Jornada   = i[1]
+                v_Equipo1   = i[2]
+                v_Equipo2   = i[3]
+                v_Goles1    = i[4]
+                v_Goles2    = i[5]
+
+                html_parte2 += '''<tr>
+            <td style="width: 2%; text-align: center; border-style: solid; border-color: black; background-color: #F4F8F4;">{}</td>
+            <td style="width: 5%; text-align: center; border-style: solid; border-color: black; background-color: #F4F8F4;">{}</td>
+            <td style="width: 5%; text-align: left; border-style: solid; border-color: black; background-color: #F4F8F4ite;">{}</td>
+            <td style="width: 2%; text-align: left; border-style: solid; border-color: black; background-color: #F4F8F4;">{}</td>
+            <td style="width: 2%; text-align: center; border-style: solid; border-color: black; background-color: #F4F8F4;">{}</td>
+            <td style="width: 2%; text-align: center; border-style: solid; border-color: black; background-color: #F4F8F4;">{}</td>
+            </tr>'''.format(v_Temporada,v_Jornada,v_Equipo1,v_Equipo2,v_Goles1,v_Goles2)
+                
+
+            hmtl_fin = '''
+            </tbody>
+            </table> </body>'''
+
+            html_archivo = html_parte1 + html_parte2 + hmtl_fin
+
+            reporte_J.write(html_archivo)
+            reporte_J.close()
+
+            print('Reporte creado con éxito')
+            webbrowser.open_new_tab(nombre)
+
+            show = "Generando archivo de resultados jornada {} temporada {} - {}".format(jNum,año1,año2) + "\n"
+            print(show)
+            return show
