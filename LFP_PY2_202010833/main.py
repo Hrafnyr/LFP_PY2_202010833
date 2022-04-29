@@ -1,5 +1,4 @@
 
-from cgitb import reset
 import os as documento
 from listas import lista
 import tkinter as tk
@@ -12,12 +11,6 @@ import webbrowser
 import pandas as pd
 
 data = lista()
-
-def obtenerCSV():
-    path = documento.path.dirname(documento.path.abspath(__file__))+ "\LaLigaBot.csv"
-
-    df = pd.read_csv(path)
-    print (df.values)
     
 def mostrarDatos():
     #txt.delete("1.0", "end")
@@ -191,21 +184,31 @@ def verificaPalabrasReservadas(lexema,fila,columna): #Método que verifica las p
     if encontrado == False:
         data.insertarToken("tk_id",lexema,fila,columna)
 
-def verReportes():
-    op = ""
-    if op =="Manual de usuario":
-        path = documento.path.dirname(documento.path.abspath(__file__))+ "\Documentación\Manual de Usuario.pdf"
-        webbrowser.open_new(path)
-    elif op =="Manual técnico":
-        path = documento.path.dirname(documento.path.abspath(__file__))+ "\Documentación\Manual Técnico.pdf"
-        webbrowser.open_new(path)
-    else:
-        print('NONE')
+def verManualUsuario():
     
-def verHtml():
-    t = True
-    if t:
-        data.crearHtml()
+    path = documento.path.dirname(documento.path.abspath(__file__))+ "\Documentación\Manual de Usuario.pdf"
+    webbrowser.open_new(path)
+
+def verManualTecnico():
+    path = documento.path.dirname(documento.path.abspath(__file__))+ "\Documentación\Manual Técnico.pdf"
+    webbrowser.open_new(path)
+    
+def ayuda():
+    texto = '''Comandos: 
+        Comando entre corchetes opcional; 
+        codición1: LOCAL,VISITANTE,TOTAL; 
+        condicion2: SUPERIOR, INFERIOR
+        archivo: nombre para reporte;
+
+    RESULTADO "equipo" VS "equipo" TEMPORADA <YYYY-YYYY>
+        JORNADA número TEMPORADA <YYYY-YYYY> [ -f archivo ]
+        GOLES condición "equipo" TEMPORADA <YYYY-YYYY>
+        TABLA TEMPORADA <YYYY-YYYY> [ -f archivo ]
+PARTIDOS "equipo" TEMPORADA <YYYY-YYYY>[-f archivo][-ji número][-jf número]
+        TOP condición2 TEMPORADA <YYYY-YYYY> [ -n número ]
+        ADIOS
+    '''
+    MessageBox.showinfo("Información", texto)
 
 #------------------------------Interfaz gráfica-------------------------------------
 
@@ -245,12 +248,12 @@ botonLimpiarTokens.place(x=780, y=145)
 botonLimpiarTokens.config(font=("Courier", 12), bg="#0A1246",fg="white",width=23)
 
 #Botón 5
-botonManualUsuario = tk.Button(text="Manual de Usuario")
+botonManualUsuario = tk.Button(text="Manual de Usuario",command=verManualUsuario)
 botonManualUsuario.place(x=780, y=185)
 botonManualUsuario.config(font=("Courier", 12), bg="#0A1246",fg="white",width=23)
 
 #Botón 6
-botonManualtecnico = tk.Button(text="Manual Técnico")
+botonManualtecnico = tk.Button(text="Manual Técnico", command=verManualTecnico)
 botonManualtecnico.place(x=780, y=225)
 botonManualtecnico.config(font=("Courier", 12), bg="#0A1246",fg="white",width=23)
 
@@ -263,6 +266,11 @@ botonSalir.config(font=("Courier", 12), bg="#0A1246",fg="white",width=23)
 botonEnviar = tk.Button(text="Enviar", command=analizarTexto) 
 botonEnviar.place(x=765, y=600)
 botonEnviar.config(font=("Courier", 8), bg="#0A1246",fg="white",width=10)
+
+#Botón 8
+botonSalir = tk.Button(text="Ayuda",command=ayuda)
+botonSalir.place(x=780, y=305)
+botonSalir.config(font=("Courier", 12), bg="#0A1246",fg="white",width=23)
 
 #------------------------- Area de texto ----------------------------------------
 txt = stxt.ScrolledText(root,width=90, height=35)

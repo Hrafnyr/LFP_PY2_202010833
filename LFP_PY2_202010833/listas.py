@@ -27,7 +27,7 @@ class lista():
             MessageBox.showinfo('Mensaje','No hay tokens para mostrar')
         else:
             datos = sintantico()
-            datos.limpiar()
+            datos.errores = self.listaErrores
             aux = []
             aux2 = 0
             for i in self.listaTokens:
@@ -56,16 +56,15 @@ class lista():
             print('No hay errores')
             MessageBox.showinfo('Mensaje','No hay errores')
         else:
-
             MessageBox.showerror('Atención','Se encontraron errores')
             for i in self.listaErrores:
                 s = i.enviarErrores()
                 print(s)
            
     def limpiarLogErrores(self):
-        data= sintantico()
+       
         del self.listaErrores[:]
-        data.limpiarError()
+    
         print("Vaciando...")
         MessageBox.showinfo('Mensaje','Errores eliminados correctamente')
 
@@ -185,8 +184,6 @@ class sintantico():
 
     def __init__(self):
         self.tokensS = []
-        self.equipos = []
-        self.puntajes =[]
         self.errores = []
         self.columna = 0
         self.contador = 0
@@ -195,7 +192,7 @@ class sintantico():
         self.tokensS.extend(lista)
 
     def insertErrorS(self, caracter,tipo,fila,columna):
-        self.errores.append(errorS(caracter,tipo,fila,columna))  
+        self.errores.append(error(caracter,tipo,fila,columna))  
 
     def quitarToken(self):
         #Sacar el primer token de la lista
@@ -211,17 +208,6 @@ class sintantico():
         except:
             return None
 
-    def showError(self): #Metodo de prueba para verificar el correcto guardado de los errores
-        i:errorS
-        if len(self.errores)==0:
-            print('No hay errores Sintácticos')
-            #MessageBox.showinfo('Mensaje','No hay errores')
-        else:
-            #MessageBox.showerror('Atención','Se encontraron errores')
-            for i in self.errores:
-                s = i.enviarErrores()
-                print(s)
-
     #----- Inicio del analizador sintáctico con base a la gramática establecidad en la documentacion ---------
     #<INICIO> ::= <RESULTADO_PARTIDO> | <JORNADA> | <GOLES> | <T_TEMPORADA> | <PARTIDOS> | <TOP> | <ADIOS>
     def inicio(self):
@@ -230,7 +216,7 @@ class sintantico():
         tmp = self.getToken()
 
         if tmp is None:
-            self.insertErrorS("Null","Se esperaba: RESULTADO, JORNADA,GOLES,TABLA, PARTIDOS, TOP O ADIOS",1,0)
+            self.insertErrorS("Null","Se esperaba: RESULTADO, JORNADA,GOLES,TABLA, PARTIDOS, TOP O ADIOS",1,1)
             r = "Se esperaba: RESULTADO,JORNADA,GOLES,TABLA, PARTIDOS, TOP O ADIOS" + "\n"
             return r
         elif tmp[0] == "tk_resultado":
@@ -257,7 +243,7 @@ class sintantico():
         else:
             label = "Error: {}".format(tmp[1])
             txt = "Se esperaba: RESULTADO,JORNADA,GOLES,TABLA, PARTIDOS, TOP O ADIOS" + "\n"
-            self.insertErrorS(label,"Se esperaba: RESULTADO,JORNADA,GOLES,TABLA, PARTIDOS, TOP O ADIOS",1,0)
+            self.insertErrorS(label,"Se esperaba: RESULTADO,JORNADA,GOLES,TABLA, PARTIDOS, TOP O ADIOS",1,1)
             return txt
 
     #--> se espera tk_resultado
@@ -273,65 +259,74 @@ class sintantico():
             #---> se espera tk_cadena
             tk = self.quitarToken()
             if tk is None:
-                self.insertErrorS("Null","Se esperaba una cadena",11,0)
-                return #Si no viene entonces ya no se ejecuta lo demás
+                r = "Se esperaba: una cadena" + "\n"
+                self.insertErrorS("Null","Se esperaba una cadena",10,1)
+                return r #Si no viene entonces ya no se ejecuta lo demás
             
             elif tk[0] == "tk_cadena":
                 equipo1 = tk[1]
                 #---> se espera tk_vs
                 tk = self.quitarToken()
                 if tk is None:
-                    self.insertErrorS("Null","Se esperaba VS",11,0)
-                    return #Si no viene entonces ya no se ejecuta lo demás
+                    r = "Se esperaba VS"+ "\n"
+                    self.insertErrorS("Null","Se esperaba VS",12,1)
+                    return r #Si no viene entonces ya no se ejecuta lo demás
                 elif tk[0] == "tk_vs":
                 
                     #---> se espera tk_cadena
                     tk = self.quitarToken()
                     if tk is None:
-                        self.insertErrorS("Null","Se esperaba una cadena",11,0)
-                        return #Si no viene entonces ya no se ejecuta lo demás
+                        r = "Se esperaba una cadena"+ "\n"
+                        self.insertErrorS("Null","Se esperaba una cadena",15,0)
+                        return r #Si no viene entonces ya no se ejecuta lo demás
                     elif tk[0] == "tk_cadena":
                         equipo2 = tk[1]
                         #---> se espera tk_temporada
                         tk = self.quitarToken()
                         if tk is None:
-                            self.insertErrorS("Null","Se esperaba TEMPORADA",11,0)
-                            return #Si no viene entonces ya no se ejecuta lo demás
+                            r = "Se esperaba TEMPORADA"+ "\n"
+                            self.insertErrorS("Null","Se esperaba TEMPORADA",0,0)
+                            return r #Si no viene entonces ya no se ejecuta lo demás
                         elif tk[0] == "tk_temporada":
                             
                             #---> se espera tk_Smenor
                             tk = self.quitarToken()
                             if tk is None:
-                                self.insertErrorS("Null","Se esperaba un <",11,0)
-                                return #Si no viene entonces ya no se ejecuta lo demás
+                                r = "Se esperaba un <"+ "\n"
+                                self.insertErrorS("Null","Se esperaba un <",0,0)
+                                return r #Si no viene entonces ya no se ejecuta lo demás
                             elif tk[0] == "tk_Smenor":
 
                                 #---> se espera tk_año
                                 tk = self.quitarToken()
                                 if tk is None:
-                                    self.insertErrorS("Null","Se esperaba un año",11,0)
-                                    return #Si no viene entonces ya no se ejecuta lo demás
+                                    r = "Se esperaba un año (YYYY)"+ "\n"
+                                    self.insertErrorS("Null","Se esperaba un año",0,0)
+                                    return r #Si no viene entonces ya no se ejecuta lo demás
                                 elif tk[0] == "tk_año":
                                     año1 = tk[1]
                                     #---> se espera tk_guion
                                     tk = self.quitarToken()
                                     if tk is None:
+                                        r = "Se esperaba un -"+ "\n"
                                         self.insertErrorS("Null","Se esperaba un -",11,0)
-                                        return #Si no viene entonces ya no se ejecuta lo demás
+                                        return r #Si no viene entonces ya no se ejecuta lo demás
                                     elif tk[0] == "tk_guion":
 
                                         #---> se espera tk_año
                                         tk = self.quitarToken()
                                         if tk is None:
+                                            r = "Se esperaba un año (YYYY)"+ "\n"
                                             self.insertErrorS("Null","Se esperaba un año",11,0)
-                                            return #Si no viene entonces ya no se ejecuta lo demás
+                                            return r#Si no viene entonces ya no se ejecuta lo demás
                                         elif tk[0] == "tk_año":
                                             año2 = tk[1]
                                             #---> se espera tk_Smayor
                                             tk = self.quitarToken()
                                             if tk is None:
+                                                r = "Se esperaba un >"+ "\n"
                                                 self.insertErrorS("Null","Se esperaba un >",11,0)
-                                                return #Si no viene entonces ya no se ejecuta lo demás
+                                                return r#Si no viene entonces ya no se ejecuta lo demás
                                             elif tk[0] == "tk_Smayor":
                                                 
                                                 #Funcionalidad a realizar
@@ -342,34 +337,54 @@ class sintantico():
                                                 return dataR
 
                                             else:
+                                                r = "Se esperaba un >"+ "\n"
                                                 label = "Error: {}".format(tk[1])
-                                                self.insertErrorS(label,"Se esperaba un >",11,0)
+                                                self.insertErrorS(label,"Se esperaba un >",tk[3],1)
+                                                return r
                                         else:
+                                            r = "Se esperaba un año"+ "\n"
                                             label = "Error: {}".format(tk[1])
-                                            self.insertErrorS(label,"Se esperaba un año",11,0)                                            
+                                            self.insertErrorS(label,"Se esperaba un año",tk[3],1)    
+                                            return r                                        
                                     else:
+                                        r = "Se esperaba un -"+ "\n"
                                         label = "Error: {}".format(tk[1])
-                                        self.insertErrorS(label,"Se esperaba un -",11,0)
+                                        self.insertErrorS(label,"Se esperaba un -",tk[3],1)
+                                        return r
                                 else:
+                                    r = "Se esperaba un año"+ "\n"
                                     label = "Error: {}".format(tk[1])
-                                    self.insertErrorS(label,"Se esperaba un año",11,0)
+                                    self.insertErrorS(label,"Se esperaba un año",tk[3],1)
+                                    return r
                             else:
+                                r = "Se esperaba un <"+ "\n"
                                 label = "Error: {}".format(tk[1])
-                                self.insertErrorS(label,"Se esperaba un <",11,0)        
+                                self.insertErrorS(label,"Se esperaba un <",tk[3],1)
+                                return r        
                         else:
+                            r = "Se esperaba TEMPORADA"+ "\n"
                             label = "Error: {}".format(tk[1])
-                            self.insertErrorS(label,"Se esperaba TEMPORADA",11,0)
+                            self.insertErrorS(label,"Se esperaba TEMPORADA",tk[3],1)
+                            return r
                     else:
+                        r = "Se esperaba una cadena"+ "\n"
                         label = "Error: {}".format(tk[1])
-                        self.insertErrorS(label,"Se esperaba una cadena",11,0)
+                        self.insertErrorS(label,"Se esperaba una cadena",tk[3],1)
+                        return r
                 else:
+                    r = "Se esperaba VS"+ "\n"
                     label = "Error: {}".format(tk[1])
-                    self.insertErrorS(label,"Se esperaba VS",11,0)
+                    self.insertErrorS(label,"Se esperaba VS",tk[3],1)
+                    return r
             else:
+                r = "Se esperaba una cadena"+ "\n"
                 label = "Error: {}".format(tk[1])
-                self.insertErrorS(label,"Se esperaba una cadena",11,0)
+                self.insertErrorS(label,"Se esperaba una cadena",tk[3],1)
+                return r
         else:
-            self.insertErrorS("Null","Se esperaba RESULTADO",1,0)            
+            r = "Se esperaba RESULTADO"+ "\n"
+            self.insertErrorS("Null","Se esperaba RESULTADO",tk[3],1)
+            return r            
 
     #--> se espera tk_jornada
     def jornada(self):
@@ -384,51 +399,58 @@ class sintantico():
             #---> se espera tk_num
             tk = self.quitarToken()
             if tk is None:
+                r = "Se esperaba número de 1 o 2 dígitos"+ "\n"
                 self.insertErrorS("Null","Se esperaba un número de 1 o 2 dígitos positivos",11,0)
-                return #Si no viene entonces ya no se ejecuta lo demás
+                return r#Si no viene entonces ya no se ejecuta lo demás
             
             elif tk[0] == "tk_num":
                 numJornada = tk[1]
                 #---> se espera tk_temporada
                 tk = self.quitarToken()
                 if tk is None:
+                    r = "Se esperaba TEMPORADA"+ "\n"
                     self.insertErrorS("Null","Se esperaba TEMPORADA",11,0)
-                    return #Si no viene entonces ya no se ejecuta lo demás
+                    return r#Si no viene entonces ya no se ejecuta lo demás
                 elif tk[0] == "tk_temporada":
                             
                     #---> se espera tk_Smenor
                     tk = self.quitarToken()
                     if tk is None:
+                        r = "Se esperaba un <"+ "\n"
                         self.insertErrorS("Null","Se esperaba un <",11,0)
-                        return #Si no viene entonces ya no se ejecuta lo demás
+                        return r#Si no viene entonces ya no se ejecuta lo demás
                     elif tk[0] == "tk_Smenor":
 
                         #---> se espera tk_año
                         tk = self.quitarToken()
                         if tk is None:
+                            r = "Se esperaba un año (YYYY)"+ "\n"
                             self.insertErrorS("Null","Se esperaba un año",11,0)
-                            return #Si no viene entonces ya no se ejecuta lo demás
+                            return r#Si no viene entonces ya no se ejecuta lo demás
                         elif tk[0] == "tk_año":
                             año1 = tk[1]
                             #---> se espera tk_guion
                             tk = self.quitarToken()
                             if tk is None:
+                                r = "Se esperaba un -"+ "\n"
                                 self.insertErrorS("Null","Se esperaba un -",11,0)
-                                return #Si no viene entonces ya no se ejecuta lo demás
+                                return r#Si no viene entonces ya no se ejecuta lo demás
                             elif tk[0] == "tk_guion":
 
                                 #---> se espera tk_año
                                 tk = self.quitarToken()
                                 if tk is None:
+                                    r = "Se esperaba un año"+ "\n"
                                     self.insertErrorS("Null","Se esperaba un año",11,0)
-                                    return #Si no viene entonces ya no se ejecuta lo demás
+                                    return r#Si no viene entonces ya no se ejecuta lo demás
                                 elif tk[0] == "tk_año":
                                     año2 = tk[1]
                                     #---> se espera tk_Smayor
                                     tk = self.quitarToken()
                                     if tk is None:
+                                        r = "Se esperaba un >"+ "\n"
                                         self.insertErrorS("Null","Se esperaba un >",11,0)
-                                        return #Si no viene entonces ya no se ejecuta lo demás
+                                        return r#Si no viene entonces ya no se ejecuta lo demás
                                     elif tk[0] == "tk_Smayor":
                                         
                                         #Se espera ---> <ASIGNAR_NOMBRE>
@@ -446,28 +468,44 @@ class sintantico():
                                         return resp
 
                                     else:
+                                        r = "Se esperaba un >"+ "\n"
                                         label = "Error: {}".format(tk[1])
-                                        self.insertErrorS(label,"Se esperaba un >",11,0)
+                                        self.insertErrorS(label,"Se esperaba un >",tk[3],0)
+                                        return r
                                 else:
+                                    r = "Se esperaba un año"+ "\n"
                                     label = "Error: {}".format(tk[1])
-                                    self.insertErrorS(label,"Se esperaba un año",11,0)                                  
+                                    self.insertErrorS(label,"Se esperaba un año",tk[3],0)  
+                                    return r                                
                             else:
+                                r = "Se esperaba un -"+ "\n"
                                 label = "Error: {}".format(tk[1])
-                                self.insertErrorS(label,"Se esperaba un -",11,0)
+                                self.insertErrorS(label,"Se esperaba un -",tk[3],0)
+                                return r
                         else:
+                            r = "Se esperaba un año"+ "\n"
                             label = "Error: {}".format(tk[1])
-                            self.insertErrorS(label,"Se esperaba un año",11,0)
+                            self.insertErrorS(label,"Se esperaba un año",tk[3],0)
+                            return r
                     else:
+                        r = "Se esperaba un <"+ "\n"
                         label = "Error: {}".format(tk[1])
-                        self.insertErrorS(label,"Se esperaba un <",11,0)        
+                        self.insertErrorS(label,"Se esperaba un <",tk[3],0)       
+                        return r 
                 else:
+                    r = "Se esperaba TEMPORADA"+ "\n"
                     label = "Error: {}".format(tk[1])
-                    self.insertErrorS(label,"Se esperaba TEMPORADA",11,0)
+                    self.insertErrorS(label,"Se esperaba TEMPORADA",tk[3],0)
+                    return r
             else:
+                r = "Se esperaba número de 1 o 2 dígitos"+ "\n"
                 label = "Error: {}".format(tk[1])
-                self.insertErrorS(label,"Se esperaba un número de 1 o 2 dígitos positivos",11,0)
+                self.insertErrorS(label,"Se esperaba un número de 1 o 2 dígitos positivos",tk[3],0)
+                return r
         else:
-            self.insertErrorS("Null","Se esperaba JORNADA",1,0)       
+            r = "Se esperaba JORNADA"+ "\n"
+            self.insertErrorS("Null","Se esperaba JORNADA",1,0)     
+            return r  
 
     #Produccion ::= tk_-f tk_id | épsilon
     def asignarNombre(self):
@@ -481,24 +519,27 @@ class sintantico():
             #---> se espera tk_-f
             tk = self.quitarToken()
             if tk is None:
+                r = "Se esperaba -f"+ "\n"
                 self.insertErrorS("Null","Se esperaba -f",11,0)
-                return #Si no viene entonces ya no se ejecuta lo demás
+                return r #Si no viene entonces ya no se ejecuta lo demás
             
             elif tk[0] == "tk_guion":
                 
                 #---> se espera tk_-f
                 tk = self.quitarToken()
                 if tk is None:
+                    r = "Se esperaba -f"+ "\n"
                     self.insertErrorS("Null","Se esperaba -f",11,0)
-                    return #Si no viene entonces ya no se ejecuta lo demás
+                    return r#Si no viene entonces ya no se ejecuta lo demás
 
                 elif tk[0] == "tk_-f":
 
                     #---> se espera tk_id
                     tk = self.quitarToken()
                     if tk is None:
+                        r = "Se esperaba nombre"+ "\n"
                         self.insertErrorS("Null","Se esperaba un ID",11,0)
-                        return
+                        return r
                     elif tk[0] == "tk_id":
                         
                         #Funcionalidad
@@ -506,8 +547,10 @@ class sintantico():
                         return tk[1]
 
                     else:
+                        r = "Se esperaba -f"+ "\n"
                         label = "Error: {}".format(tk[1])
-                        self.insertErrorS(label,"Se esperaba -f",11,0)
+                        self.insertErrorS(label,"Se esperaba -f",tk[3],0)
+                        return r
                 else: 
                     return None #Si no lo encuentra entonces devuelve None para simular el épsilon
             else:
@@ -527,59 +570,67 @@ class sintantico():
             #Se llama la función
             condicion = self.condicion()
             if condicion is None:
+                r = "Se esperaba LOCAL,VISITANTE O TOTAL"+ "\n"
                 self.insertErrorS("Null","Se esperaba LOCAL,VISITANTE O TOTAL",11,0)
-                return #Si no viene entonces ya no se ejecuta lo demás
+                return r #Si no viene entonces ya no se ejecuta lo demás
             else:
                 print("Condicion es:", condicion)
             
                 #---> se espera tk_cadena
                 tk = self.quitarToken()
                 if tk is None:
+                    r = "Se esperaba una cadena"+ "\n"
                     self.insertErrorS("Null","Se esperaba una cadena",11,0)
-                    return #Si no viene entonces ya no se ejecuta lo demás
+                    return r#Si no viene entonces ya no se ejecuta lo demás
                 
                 elif tk[0] == "tk_cadena":
                     equipo = tk[1]
                     #---> se espera tk_temporada
                     tk = self.quitarToken()
                     if tk is None:
+                        r = "Se esperaba TEMPORADA"+ "\n"
                         self.insertErrorS("Null","Se esperaba TEMPORADA",11,0)
-                        return #Si no viene entonces ya no se ejecuta lo demás
+                        return r#Si no viene entonces ya no se ejecuta lo demás
                     elif tk[0] == "tk_temporada":
 
                         #---> se espera tk_Smenor
                         tk = self.quitarToken()
                         if tk is None:
+                            r = "Se esperaba un <"+ "\n"
                             self.insertErrorS("Null","Se esperaba un <",11,0)
-                            return #Si no viene entonces ya no se ejecuta lo demás
+                            return r#Si no viene entonces ya no se ejecuta lo demás
                         elif tk[0] == "tk_Smenor":
 
                             #---> se espera tk_año
                             tk = self.quitarToken()
                             if tk is None:
+                                r = "Se esperaba un año (YYYY)"+ "\n"
                                 self.insertErrorS("Null","Se esperaba un año",11,0)
-                                return #Si no viene entonces ya no se ejecuta lo demás
+                                return r#Si no viene entonces ya no se ejecuta lo demás
                             elif tk[0] == "tk_año":
                                 año1 = tk[1]
                                 #---> se espera tk_guion
                                 tk = self.quitarToken()
                                 if tk is None:
+                                    r = "Se esperaba un -"+ "\n"
                                     self.insertErrorS("Null","Se esperaba un -",11,0)
-                                    return #Si no viene entonces ya no se ejecuta lo demás
+                                    return r#Si no viene entonces ya no se ejecuta lo demás
                                 elif tk[0] == "tk_guion":
 
                                     #---> se espera tk_año
                                     tk = self.quitarToken()
                                     if tk is None:
+                                        r = "Se esperaba un año"+ "\n"
                                         self.insertErrorS("Null","Se esperaba un año",11,0)
-                                        return #Si no viene entonces ya no se ejecuta lo demás
+                                        return r#Si no viene entonces ya no se ejecuta lo demás
                                     elif tk[0] == "tk_año":
                                         año2 = tk[1]
                                         #---> se espera tk_Smayor
                                         tk = self.quitarToken()
                                         if tk is None:
+                                            r = "Se esperaba un >"+ "\n"
                                             self.insertErrorS("Null","Se esperaba un >",11,0)
-                                            return #Si no viene entonces ya no se ejecuta lo demás
+                                            return r#Si no viene entonces ya no se ejecuta lo demás
                                         elif tk[0] == "tk_Smayor":
                                             
                                             #Funcionalidad
@@ -589,29 +640,44 @@ class sintantico():
                                             return res
 
                                         else:
+                                            r = "Se esperaba un >"+ "\n"
                                             label = "Error: {}".format(tk[1])
-                                            self.insertErrorS(label,"Se esperaba un >",11,0)
+                                            self.insertErrorS(label,"Se esperaba un >",tk[3],0)
+                                            return r
                                     else:
+                                        r = "Se esperaba un año"+ "\n"
                                         label = "Error: {}".format(tk[1])
-                                        self.insertErrorS(label,"Se esperaba un año",11,0)
-                                        
+                                        self.insertErrorS(label,"Se esperaba un año",tk[3],0)
+                                        return r          
                                 else:
+                                    r = "Se esperaba un año"+ "\n"
                                     label = "Error: {}".format(tk[1])
-                                    self.insertErrorS(label,"Se esperaba un -",11,0)
+                                    self.insertErrorS(label,"Se esperaba un -",tk[3],0)
+                                    return r
                             else:
+                                r = "Se esperaba un año"+ "\n"
                                 label = "Error: {}".format(tk[1])
-                                self.insertErrorS(label,"Se esperaba un año",11,0)
+                                self.insertErrorS(label,"Se esperaba un año",tk[3],0)
+                                return r
                         else:
+                            r = "Se esperaba un <"+ "\n"
                             label = "Error: {}".format(tk[1])
-                            self.insertErrorS(label,"Se esperaba un <",11,0)        
+                            self.insertErrorS(label,"Se esperaba un <",tk[3],0)
+                            return r        
                     else:
+                        r = "Se esperaba TEMPORADA"+ "\n"
                         label = "Error: {}".format(tk[1])
-                        self.insertErrorS(label,"Se esperaba TEMPORADA",11,0)
+                        self.insertErrorS(label,"Se esperaba TEMPORADA",tk[3],0)
+                        return r
                 else:
+                    r = "Se esperaba una cadena"+ "\n"
                     label = "Error: {}".format(tk[1])
-                    self.insertErrorS(label,"Se esperaba una cadena",11,0)
+                    self.insertErrorS(label,"Se esperaba una cadena",tk[3],0)
+                    return r
         else:
-            self.insertErrorS("Null","Se esperaba GOLES",1,0)    
+            r = "Se esperaba GOLES"+ "\n"
+            self.insertErrorS("Null","Se esperaba GOLES",1,0)
+            return r    
   
     #<CONDICION>::= tk_local | tk_visitante | tk_total
     def condicion(self):
@@ -626,8 +692,9 @@ class sintantico():
             #---> se espera tk_local o tk_visitante o tk_total
             tk = self.quitarToken()
             if tk is None:
+                r = "Se esperaba LOCAL,VISITANTE O TOTAL"+ "\n"
                 self.insertErrorS("Null","Se esperaba LOCAL,VISITANTE O TOTAL",11,0)
-                return #Si no viene entonces ya no se ejecuta lo demás
+                return r#Si no viene entonces ya no se ejecuta lo demás
             
             elif tk[0] == "tk_local" or tk[0] == "tk_visitante" or tk[0] == "tk_total":
                 
@@ -635,8 +702,10 @@ class sintantico():
                         print("La condicion es: ",tk[1])
                         return tk[1]
             else:
+                r = "Se esperaba LOCAL,VISITANTE O TOTAL"+ "\n"
                 label = "Error: {}".format(tk[1])
-                self.insertErrorS(label,"Se esperaba LOCAL,VISITANTE O TOTAL",11,0)     
+                self.insertErrorS(label,"Se esperaba LOCAL,VISITANTE O TOTAL",tk[3],0)
+                return r     
 
     #--> Se espera tk_tabla
     def t_Temporada(self):
@@ -650,43 +719,49 @@ class sintantico():
             #---> se espera tk_temporada
             tk = self.quitarToken()
             if tk is None:
+                r = "Se esperaba TEMPORADA"+ "\n"
                 self.insertErrorS("Null","Se esperaba TEMPORADA",11,0)
-                return #Si no viene entonces ya no se ejecuta lo demás
+                return r #Si no viene entonces ya no se ejecuta lo demás
             elif tk[0] == "tk_temporada":
                        
                 #---> se espera tk_Smenor
                 tk = self.quitarToken()
                 if tk is None:
+                    r = "Se esperaba un <"+ "\n"
                     self.insertErrorS("Null","Se esperaba un <",11,0)
-                    return #Si no viene entonces ya no se ejecuta lo demás
+                    return r #Si no viene entonces ya no se ejecuta lo demás
                 elif tk[0] == "tk_Smenor":
 
                     #---> se espera tk_año
                     tk = self.quitarToken()
                     if tk is None:
+                        r = "Se esperaba un año"+ "\n"
                         self.insertErrorS("Null","Se esperaba un año",11,0)
-                        return #Si no viene entonces ya no se ejecuta lo demás
+                        return r #Si no viene entonces ya no se ejecuta lo demás
                     elif tk[0] == "tk_año":
                         año1 = tk[1]
                         #---> se espera tk_guion
                         tk = self.quitarToken()
                         if tk is None:
+                            r = "Se esperaba un -"+ "\n"
                             self.insertErrorS("Null","Se esperaba un -",11,0)
-                            return #Si no viene entonces ya no se ejecuta lo demás
+                            return r#Si no viene entonces ya no se ejecuta lo demás
                         elif tk[0] == "tk_guion":
 
                             #---> se espera tk_año
                             tk = self.quitarToken()
                             if tk is None:
+                                r = "Se esperaba un año"+ "\n"
                                 self.insertErrorS("Null","Se esperaba un año",11,0)
-                                return #Si no viene entonces ya no se ejecuta lo demás
+                                return r#Si no viene entonces ya no se ejecuta lo demás
                             elif tk[0] == "tk_año":
                                 año2 = tk[1]
                                 #---> se espera tk_Smayor
                                 tk = self.quitarToken()
                                 if tk is None:
+                                    r = "Se esperaba un >"+ "\n"
                                     self.insertErrorS("Null","Se esperaba un >",11,0)
-                                    return #Si no viene entonces ya no se ejecuta lo demás
+                                    return r #Si no viene entonces ya no se ejecuta lo demás
                                 elif tk[0] == "tk_Smayor":
                                     
                                     #Se espera ---> <ASIGNAR_NOMBRE>
@@ -704,26 +779,39 @@ class sintantico():
                                     return res
 
                                 else:
+                                    r = "Se esperaba un >"+ "\n"
                                     label = "Error: {}".format(tk[1])
-                                    self.insertErrorS(label,"Se esperaba un >",11,0)
+                                    self.insertErrorS(label,"Se esperaba un >",tk[3],0)
+                                    return r
                             else:
+                                r = "Se esperaba un año"+ "\n"
                                 label = "Error: {}".format(tk[1])
-                                self.insertErrorS(label,"Se esperaba un año",11,0)
-                                
+                                self.insertErrorS(label,"Se esperaba un año",tk[3],0)
+                                return r                     
                         else:
+                            r = "Se esperaba un -"+ "\n"
                             label = "Error: {}".format(tk[1])
-                            self.insertErrorS(label,"Se esperaba un -",11,0)
+                            self.insertErrorS(label,"Se esperaba un -",tk[3],0)
+                            return r
                     else:
+                        r = "Se esperaba un año"+ "\n"
                         label = "Error: {}".format(tk[1])
-                        self.insertErrorS(label,"Se esperaba un año",11,0)
+                        self.insertErrorS(label,"Se esperaba un año",tk[3],0)
+                        return r
                 else:
+                    r = "Se esperaba un <"+ "\n"
                     label = "Error: {}".format(tk[1])
-                    self.insertErrorS(label,"Se esperaba un <",11,0)        
+                    self.insertErrorS(label,"Se esperaba un <",tk[3],0)
+                    return r         
             else:
+                r = "Se esperaba TEMPORADA"+ "\n"
                 label = "Error: {}".format(tk[1])
-                self.insertErrorS(label,"Se esperaba TEMPORADA",11,0)
+                self.insertErrorS(label,"Se esperaba TEMPORADA",tk[3],0)
+                return r
         else:
-            self.insertErrorS("Null","Se esperaba TABLA",1,0)   
+            r = "Se esperaba TABLA"+ "\n"
+            self.insertErrorS("Null","Se esperaba TABLA",1,0) 
+            return r  
 
     #--> Se espera tk_partidos
     def partidos(self):
@@ -740,51 +828,58 @@ class sintantico():
             #---> se espera tk_cadena
             tk = self.quitarToken()
             if tk is None:
+                r = "Se esperaba una cadena"+ "\n"
                 self.insertErrorS("Null","Se esperaba un cadena",11,0)
-                return #Si no viene entonces ya no se ejecuta lo demás
+                return r#Si no viene entonces ya no se ejecuta lo demás
             
             elif tk[0] == "tk_cadena":
                 equipo = tk[1]
                 #---> se espera tk_temporada
                 tk = self.quitarToken()
                 if tk is None:
+                    r = "Se esperaba TEMPORADA"+ "\n"
                     self.insertErrorS("Null","Se esperaba TEMPORADA",11,0)
-                    return #Si no viene entonces ya no se ejecuta lo demás
+                    return r#Si no viene entonces ya no se ejecuta lo demás
                 elif tk[0] == "tk_temporada":
       
                     #---> se espera tk_Smenor
                     tk = self.quitarToken()
                     if tk is None:
+                        r = "Se esperaba un <"+ "\n"
                         self.insertErrorS("Null","Se esperaba un <",11,0)
-                        return #Si no viene entonces ya no se ejecuta lo demás
+                        return r#Si no viene entonces ya no se ejecuta lo demás
                     elif tk[0] == "tk_Smenor":
 
                         #---> se espera tk_año
                         tk = self.quitarToken()
                         if tk is None:
+                            r = "Se esperaba un año"+ "\n"
                             self.insertErrorS("Null","Se esperaba un año",11,0)
-                            return #Si no viene entonces ya no se ejecuta lo demás
+                            return r#Si no viene entonces ya no se ejecuta lo demás
                         elif tk[0] == "tk_año":
                             año1 = tk[1]
                             #---> se espera tk_guion
                             tk = self.quitarToken()
                             if tk is None:
+                                r = "Se esperaba un -"+ "\n"
                                 self.insertErrorS("Null","Se esperaba un -",11,0)
-                                return #Si no viene entonces ya no se ejecuta lo demás
+                                return r#Si no viene entonces ya no se ejecuta lo demás
                             elif tk[0] == "tk_guion":
 
                                 #---> se espera tk_año
                                 tk = self.quitarToken()
                                 if tk is None:
+                                    r = "Se esperaba un año"+ "\n"
                                     self.insertErrorS("Null","Se esperaba un año",11,0)
-                                    return #Si no viene entonces ya no se ejecuta lo demás
+                                    return r#Si no viene entonces ya no se ejecuta lo demás
                                 elif tk[0] == "tk_año":
                                     año2 = tk[1]
                                     #---> se espera tk_Smayor
                                     tk = self.quitarToken()
                                     if tk is None:
+                                        r = "Se esperaba un >"+ "\n"
                                         self.insertErrorS("Null","Se esperaba un >",11,0)
-                                        return #Si no viene entonces ya no se ejecuta lo demás
+                                        return r#Si no viene entonces ya no se ejecuta lo demás
                                     elif tk[0] == "tk_Smayor":
                                         
                                         #Se espera ---> <ASIGNAR_NOMBRE>
@@ -819,29 +914,44 @@ class sintantico():
                                         res = self.tempEquipo(equipo,año1,año2,asignar_nombre,jornada_inicial,jornada_final)
                                         return res
                                     else:
+                                        r = "Se esperaba un >"+ "\n"
                                         label = "Error: {}".format(tk[1])
-                                        self.insertErrorS(label,"Se esperaba un >",11,0)
+                                        self.insertErrorS(label,"Se esperaba un >",tk[3],0)
+                                        return r
                                 else:
+                                    r = "Se esperaba un año"+ "\n"
                                     label = "Error: {}".format(tk[1])
-                                    self.insertErrorS(label,"Se esperaba un año",11,0)
-                                    
+                                    self.insertErrorS(label,"Se esperaba un año",tk[3],0)
+                                    return r            
                             else:
+                                r = "Se esperaba un -"+ "\n"
                                 label = "Error: {}".format(tk[1])
-                                self.insertErrorS(label,"Se esperaba un -",11,0)
+                                self.insertErrorS(label,"Se esperaba un -",tk[3],0)
+                                return r
                         else:
+                            r = "Se esperaba un año"+ "\n"
                             label = "Error: {}".format(tk[1])
-                            self.insertErrorS(label,"Se esperaba un año",11,0)
+                            self.insertErrorS(label,"Se esperaba un año",tk[3],0)
+                            return r
                     else:
+                        r = "Se esperaba un <"+ "\n"
                         label = "Error: {}".format(tk[1])
-                        self.insertErrorS(label,"Se esperaba un <",11,0)        
+                        self.insertErrorS(label,"Se esperaba un <",tk[3],0)   
+                        return r     
                 else:
+                    r = "Se esperaba TEMPORADA"+ "\n"
                     label = "Error: {}".format(tk[1])
-                    self.insertErrorS(label,"Se esperaba TEMPORADA",11,0)
+                    self.insertErrorS(label,"Se esperaba TEMPORADA",tk[3],0)
+                    return r
             else:
+                r = "Se esperaba una cadena"+ "\n"
                 label = "Error: {}".format(tk[1])
-                self.insertErrorS(label,"Se esperaba una cadena",11,0)
+                self.insertErrorS(label,"Se esperaba una cadena",tk[3],0)
+                return r
         else:
+            r = "Se esperaba PARTIDOS"+ "\n"
             self.insertErrorS("Null","Se esperaba PARTIDOS",1,0)   
+            return r
 
     #<RANGO1> ::= tk_ji tk_num | épsilon
     def rango1(self):
@@ -855,24 +965,27 @@ class sintantico():
             #---> se espera tk_-ji
             tk = self.quitarToken()
             if tk is None:
+                r = "Se esperaba -ji"+ "\n"
                 self.insertErrorS("Null","Se esperaba -ji",11,0)
-                return #Si no viene entonces ya no se ejecuta lo demás
+                return r#Si no viene entonces ya no se ejecuta lo demás
             
             elif tk[0] == "tk_guion":
                 
                 #---> se espera tk_-ji
                 tk = self.quitarToken()
                 if tk is None:
+                    r = "Se esperaba -ji"+ "\n"
                     self.insertErrorS("Null","Se esperaba -ji",11,0)
-                    return #Si no viene entonces ya no se ejecuta lo demás
+                    return r#Si no viene entonces ya no se ejecuta lo demás
 
                 elif tk[0] == "tk_-ji":
 
                     #---> se espera tk_num
                     tk = self.quitarToken()
                     if tk is None:
+                        r = "Se esperaba número de 1 o 2 dígitos"+ "\n"
                         self.insertErrorS("Null","Se esperaba un número de 1 o 2 dígitos positivos",11,0)
-                        return
+                        return r
                     elif tk[0] == "tk_num":
                         
                         #Funcionalidad
@@ -880,8 +993,10 @@ class sintantico():
                         return tk[1]
 
                     else:
+                        r = "Se esperaba número de 1 o 2 dígitos"+ "\n"
                         label = "Error: {}".format(tk[1])
-                        self.insertErrorS(label,"Se esperaba un número de 1 o 2 dígitos positivos",11,0)
+                        self.insertErrorS(label,"Se esperaba un número de 1 o 2 dígitos positivos",tk[3],0)
+                        return r
                 else: 
                     return None #Si no lo encuentra entonces devuelve None para simular el épsilon
             else:
@@ -899,24 +1014,27 @@ class sintantico():
             #---> se espera tk_-jf
             tk = self.quitarToken()
             if tk is None:
+                r = "Se esperaba -jf"+ "\n"
                 self.insertErrorS("Null","Se esperaba -jf",11,0)
-                return #Si no viene entonces ya no se ejecuta lo demás
+                return r#Si no viene entonces ya no se ejecuta lo demás
             
             elif tk[0] == "tk_guion":
                 
                 #---> se espera -jf
                 tk = self.quitarToken()
                 if tk is None:
+                    r = "Se esperaba -jf"+ "\n"
                     self.insertErrorS("Null","Se esperaba -jf",11,0)
-                    return #Si no viene entonces ya no se ejecuta lo demás
+                    return r#Si no viene entonces ya no se ejecuta lo demás
 
                 elif tk[0] == "tk_-jf":
 
                     #---> se espera tk_num
                     tk = self.quitarToken()
                     if tk is None:
+                        r = "Se esperaba número de 1 o 2 dígitos"+ "\n"
                         self.insertErrorS("Null","Se esperaba un número de 1 o 2 dígitos positivos",11,0)
-                        return
+                        return r
                     elif tk[0] == "tk_num":
                         
                         #Funcionalidad
@@ -924,8 +1042,10 @@ class sintantico():
                         return tk[1]
 
                     else:
+                        r = "Se esperaba número de 1 o 2 dígitos"+ "\n"
                         label = "Error: {}".format(tk[1])
-                        self.insertErrorS(label,"Se esperaba un número de 1 o 2 dígitos positivos",11,0)
+                        self.insertErrorS(label,"Se esperaba un número de 1 o 2 dígitos positivos",tk[3],0)
+                        return r
                 else: 
                     return None #Si no lo encuentra entonces devuelve None para simular el épsilon
             else:
@@ -945,51 +1065,58 @@ class sintantico():
             #Se llama la función
             condicion2 = self.condicion2()
             if condicion2 is None:
+                r = "Se esperaba SUPERIOR o INFERIOR"+ "\n"
                 self.insertErrorS("Null","Se esperaba SUPERIOR o INFERIOR",11,0)
-                return #Si no viene entonces ya no se ejecuta lo demás
+                return r#Si no viene entonces ya no se ejecuta lo demás
             else:
                 print("Condicion es:", condicion2)
                 
                 #---> se espera tk_temporada
                 tk = self.quitarToken()
                 if tk is None:
+                    r = "Se esperaba Temporada"+ "\n"
                     self.insertErrorS("Null","Se esperaba TEMPORADA",11,0)
-                    return #Si no viene entonces ya no se ejecuta lo demás
+                    return r#Si no viene entonces ya no se ejecuta lo demás
                 elif tk[0] == "tk_temporada":
 
                     #---> se espera tk_Smenor
                     tk = self.quitarToken()
                     if tk is None:
+                        r = "Se esperaba <"+ "\n"
                         self.insertErrorS("Null","Se esperaba un <",11,0)
-                        return #Si no viene entonces ya no se ejecuta lo demás
+                        return r #Si no viene entonces ya no se ejecuta lo demás
                     elif tk[0] == "tk_Smenor":
 
                         #---> se espera tk_año
                         tk = self.quitarToken()
                         if tk is None:
+                            r = "Se esperaba un año"+ "\n"
                             self.insertErrorS("Null","Se esperaba un año",11,0)
-                            return #Si no viene entonces ya no se ejecuta lo demás
+                            return r #Si no viene entonces ya no se ejecuta lo demás
                         elif tk[0] == "tk_año":
                             año1 = tk[1]
                             #---> se espera tk_guion
                             tk = self.quitarToken()
                             if tk is None:
+                                r = "Se esperaba -"+ "\n"
                                 self.insertErrorS("Null","Se esperaba un -",11,0)
-                                return #Si no viene entonces ya no se ejecuta lo demás
+                                return r#Si no viene entonces ya no se ejecuta lo demás
                             elif tk[0] == "tk_guion":
 
                                 #---> se espera tk_año
                                 tk = self.quitarToken()
                                 if tk is None:
+                                    r = "Se esperaba un año"+ "\n"
                                     self.insertErrorS("Null","Se esperaba un año",11,0)
-                                    return #Si no viene entonces ya no se ejecuta lo demás
+                                    return r#Si no viene entonces ya no se ejecuta lo demás
                                 elif tk[0] == "tk_año":
                                     año2 = tk[1]
                                     #---> se espera tk_Smayor
                                     tk = self.quitarToken()
                                     if tk is None:
+                                        r = "Se esperaba un >"+ "\n"
                                         self.insertErrorS("Null","Se esperaba un >",11,0)
-                                        return #Si no viene entonces ya no se ejecuta lo demás
+                                        return r#Si no viene entonces ya no se ejecuta lo demás
                                     elif tk[0] == "tk_Smayor":
                                         
                                         #Se espera ---> <BANDERA>
@@ -1006,26 +1133,39 @@ class sintantico():
                                         return res
 
                                     else:
+                                        r = "Se esperaba >"+ "\n"
                                         label = "Error: {}".format(tk[1])
-                                        self.insertErrorS(label,"Se esperaba un >",11,0)
+                                        self.insertErrorS(label,"Se esperaba un >",tk[3],0)
+                                        return r
                                 else:
+                                    r = "Se esperaba año"+ "\n"
                                     label = "Error: {}".format(tk[1])
-                                    self.insertErrorS(label,"Se esperaba un año",11,0)
-                                    
+                                    self.insertErrorS(label,"Se esperaba un año",tk[3],0)
+                                    return r                                  
                             else:
+                                r = "Se esperaba -"+ "\n"
                                 label = "Error: {}".format(tk[1])
-                                self.insertErrorS(label,"Se esperaba un -",11,0)
+                                self.insertErrorS(label,"Se esperaba un -",tk[3],0)
+                                return r
                         else:
+                            r = "Se esperaba año"+ "\n"
                             label = "Error: {}".format(tk[1])
-                            self.insertErrorS(label,"Se esperaba un año",11,0)
+                            self.insertErrorS(label,"Se esperaba un año",tk[3],0)
+                            return r
                     else:
+                        r = "Se esperaba <"+ "\n"
                         label = "Error: {}".format(tk[1])
-                        self.insertErrorS(label,"Se esperaba un <",11,0)        
+                        self.insertErrorS(label,"Se esperaba un <",tk[3],0)  
+                        return r      
                 else:
+                    r = "Se esperaba TEMPORADA"+ "\n"
                     label = "Error: {}".format(tk[1])
-                    self.insertErrorS(label,"Se esperaba TEMPORADA",11,0)
+                    self.insertErrorS(label,"Se esperaba TEMPORADA",tk[3],0)
+                    return r
         else:
+            r = "Se esperaba TOP"+ "\n"
             self.insertErrorS("Null","Se esperaba TOP",1,0) 
+            return r
 
     #<CONDICION2>::= tk_superior | tk_inferior
     def condicion2(self):
@@ -1040,8 +1180,9 @@ class sintantico():
             #---> se espera tk_superior o tk_inferior
             tk = self.quitarToken()
             if tk is None:
+                r = "Se esperaba SUPERIOR o INFERIOR"+ "\n"
                 self.insertErrorS("Null","Se esperaba SUPERIOR o INFERIOR",11,0)
-                return #Si no viene entonces ya no se ejecuta lo demás
+                return r#Si no viene entonces ya no se ejecuta lo demás
             
             elif tk[0] == "tk_superior" or tk[0] == "tk_inferior":
                 
@@ -1049,8 +1190,10 @@ class sintantico():
                         print("La condicion es: ",tk[1])
                         return tk[1]
             else:
+                r = "Se esperaba SUPERIOR o INFERIOR"+ "\n"
                 label = "Error: {}".format(tk[1])
-                self.insertErrorS(label,"Se esperaba SUPERIOR o INFERIOR",11,0)     
+                self.insertErrorS(label,"Se esperaba SUPERIOR o INFERIOR",tk[3],0)
+                return r     
 
     #<BANDERA> ::= tk_n tk_num | épsilon
     def bandera(self):
@@ -1064,32 +1207,37 @@ class sintantico():
             #---> se espera tk_-n
             tk = self.quitarToken()
             if tk is None:
+                r = "Se esperaba -n"+ "\n"
                 self.insertErrorS("Null","Se esperaba -n",11,0)
-                return #Si no viene entonces ya no se ejecuta lo demás
+                return r #Si no viene entonces ya no se ejecuta lo demás
             
             elif tk[0] == "tk_guion":
                 
                 #---> se espera tk_-n
                 tk = self.quitarToken()
                 if tk is None:
+                    r = "Se esperaba -n"+ "\n"
                     self.insertErrorS("Null","Se esperaba -n",11,0)
-                    return #Si no viene entonces ya no se ejecuta lo demás
+                    return r#Si no viene entonces ya no se ejecuta lo demás
 
                 elif tk[0] == "tk_-n":
 
                     #---> se espera tk_num
                     tk = self.quitarToken()
                     if tk is None:
+                        r = "Se esperaba número"+ "\n"
                         self.insertErrorS("Null","Se esperaba un número de 1 o 2 dígitos positivo",11,0)
-                        return
+                        return r
                     elif tk[0] == "tk_num":
                         
                         #Funcionalidad
                         print("Cantidad de equipos a mostrar: ",tk[1])
                         return tk[1]
                     else:
+                        r = "Se esperaba número"+ "\n"
                         label = "Error: {}".format(tk[1])
-                        self.insertErrorS(label,"Se esperaba un número de 1 o 2 dígitos positivo",11,0)
+                        self.insertErrorS(label,"Se esperaba un número de 1 o 2 dígitos positivo",tk[3],1)
+                        return r
                 else: 
                     return None #Si no lo encuentra entonces devuelve None para simular el épsilon
             else:
@@ -1100,14 +1248,8 @@ class sintantico():
         tk = self.quitarToken()
 
         if tk[0] == "tk_adios":
-            message = "Adios, vuelve pronto :)"
+            message = "Adios, vuelve pronto :)"+ "\n"
             return message
-
-    def limpiar(self):
-        del self.tokensS [:]
-           
-    def limpiarError(self):
-        del self.errores [:]
 
     #--------------------- Funciones con CSV para mostrar resultados ---------------------
 
