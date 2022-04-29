@@ -185,6 +185,8 @@ class sintantico():
 
     def __init__(self):
         self.tokensS = []
+        self.equipos = []
+        self.puntajes =[]
         self.errores = []
         self.columna = 0
         self.contador = 0
@@ -694,6 +696,7 @@ class sintantico():
                                         asignar_nombre = "temporada.html"
                                         print("Agregando nombre por defecto:",asignar_nombre)
                                     else:
+                                        asignar_nombre = asignar_nombre+".html"
                                         print("El nombre de asignación es:", asignar_nombre)
 
                                     #Funcionalidad
@@ -724,6 +727,9 @@ class sintantico():
 
     #--> Se espera tk_partidos
     def partidos(self):
+        equipo = None
+        año1 = None
+        año2 = None
         asignar_nombre = None
         jornada_inicial = None
         jornada_final = None
@@ -738,15 +744,14 @@ class sintantico():
                 return #Si no viene entonces ya no se ejecuta lo demás
             
             elif tk[0] == "tk_cadena":
-               
+                equipo = tk[1]
                 #---> se espera tk_temporada
                 tk = self.quitarToken()
                 if tk is None:
                     self.insertErrorS("Null","Se esperaba TEMPORADA",11,0)
                     return #Si no viene entonces ya no se ejecuta lo demás
                 elif tk[0] == "tk_temporada":
-
-                            
+      
                     #---> se espera tk_Smenor
                     tk = self.quitarToken()
                     if tk is None:
@@ -760,7 +765,7 @@ class sintantico():
                             self.insertErrorS("Null","Se esperaba un año",11,0)
                             return #Si no viene entonces ya no se ejecuta lo demás
                         elif tk[0] == "tk_año":
-
+                            año1 = tk[1]
                             #---> se espera tk_guion
                             tk = self.quitarToken()
                             if tk is None:
@@ -774,7 +779,7 @@ class sintantico():
                                     self.insertErrorS("Null","Se esperaba un año",11,0)
                                     return #Si no viene entonces ya no se ejecuta lo demás
                                 elif tk[0] == "tk_año":
-
+                                    año2 = tk[1]
                                     #---> se espera tk_Smayor
                                     tk = self.quitarToken()
                                     if tk is None:
@@ -786,14 +791,17 @@ class sintantico():
                                         #Se llama la función
                                         asignar_nombre = self.asignarNombre()
                                         if asignar_nombre is None:
-                                            print("Agregando nombre por defecto: partidos.html")
+                                            asignar_nombre = "partidos.html"
+                                            print("Agregando nombre por defecto:",asignar_nombre)
                                         else:
+                                            asignar_nombre = asignar_nombre+".html"
                                             print("El nombre de asignación es:", asignar_nombre)
 
                                         #Se espera ---> <RANGO1>
                                         #Se llama la función
                                         jornada_inicial = self.rango1()
                                         if jornada_inicial is None:
+                                            jornada_inicial = "0"
                                             print("Inicio por defecto: Primer elemento")
                                         else:
                                             print("Se iniciará en:", jornada_inicial)
@@ -802,10 +810,14 @@ class sintantico():
                                         #Se llama la función
                                         jornada_final = self.rango2()
                                         if jornada_final is None:
+                                            jornada_final = "0"
                                             print("Final por defecto: último elemento")
                                         else:
                                             print("Se terminará en:", jornada_final)
-
+                                        
+                                        #Funcionalidad
+                                        res = self.tempEquipo(equipo,año1,año2,asignar_nombre,jornada_inicial,jornada_final)
+                                        return res
                                     else:
                                         label = "Error: {}".format(tk[1])
                                         self.insertErrorS(label,"Se esperaba un >",11,0)
@@ -923,6 +935,8 @@ class sintantico():
     def top(self):
         condicion2 = None
         bandera = None
+        año1 = None
+        año2 = None
 
         tk = self.quitarToken()
         if tk[0] == "tk_top":
@@ -956,7 +970,7 @@ class sintantico():
                             self.insertErrorS("Null","Se esperaba un año",11,0)
                             return #Si no viene entonces ya no se ejecuta lo demás
                         elif tk[0] == "tk_año":
-
+                            año1 = tk[1]
                             #---> se espera tk_guion
                             tk = self.quitarToken()
                             if tk is None:
@@ -970,7 +984,7 @@ class sintantico():
                                     self.insertErrorS("Null","Se esperaba un año",11,0)
                                     return #Si no viene entonces ya no se ejecuta lo demás
                                 elif tk[0] == "tk_año":
-
+                                    año2 = tk[1]
                                     #---> se espera tk_Smayor
                                     tk = self.quitarToken()
                                     if tk is None:
@@ -982,9 +996,14 @@ class sintantico():
                                         #Se llama la función
                                         bandera = self.bandera()
                                         if bandera is None:
+                                            bandera = "5"
                                             print("valor por defecto: 5 equipos a mostrar")
                                         else:
                                             print("Equipos a mostrar:", bandera)
+
+                                        #Funcioanalidad
+                                        res = self.topCSV(condicion2,año1,año2,bandera)
+                                        return res
 
                                     else:
                                         label = "Error: {}".format(tk[1])
@@ -1237,6 +1256,7 @@ class sintantico():
             show = "No se encontró en la base de datos" + "\n"
             return show
         else:
+
             #Recorro por equipos para tener la lista de equipos
             for equipo in arregloEquipos:
 
@@ -1289,10 +1309,11 @@ class sintantico():
 
                 #----- Aquí termina la ejecución de 1 equipo, regresa para el siguiente y el proceso continua
 
-            print(arregloEquiposAnalizados)
-            print(arregloDePuntos)
-            #Se espera obtener 2 arreglos, equipos y puntos, cada indice corresponde a equipo y puntos respectivos
+            #print(arregloEquiposAnalizados)
+            #print(arregloDePuntos)
             
+            #Se espera obtener 2 arreglos, equipos y puntos, cada indice corresponde a equipo y puntos respectivos
+
             #Generacion del html:
             reporte_J = open(nombre, 'w')
 
@@ -1332,4 +1353,243 @@ class sintantico():
             show = "Generando archivo de clasificación de temporada {} - {}".format(año1,año2) + "\n"
             print(show)
             return show
+
+    def tempEquipo(self,equipo,año1,año2,archivo,inicio,fin):
+        path = documento.path.dirname(documento.path.abspath(__file__))+ "\LaLigaBot.csv" #Ruta
+        df = pd.read_csv(path) #Lectura
+        
+        df.values [0][0]
+
+        #Convertir a int 
+        first = int(inicio)
+        last = int(fin)
+
+        datos = pd.DataFrame(df, columns = ['Temporada','Jornada','Equipo1', 'Equipo2', 'Goles1', 'Goles2'])
+
+        #Valores por defecto --> Se incluyen todas las jornadas
+        if first == 0 and last == 0: 
+
+            #Arreglo completo de temporada de un equipo: local y visitante
+            res1 = datos.loc[(datos['Temporada'] == '{0}-{1}'.format(año1, año2)) & (datos['Equipo1'] == equipo)].values
+        
+            res2 = datos.loc[(datos['Temporada'] == '{0}-{1}'.format(año1, año2)) & (datos['Equipo2'] == equipo)].values
+
+        elif first == 0 and last > 0: #Inicia desde primer jornada hasta el rango indicado
+
+            res1 = datos.loc[(datos['Temporada'] == '{0}-{1}'.format(año1, año2)) & (datos['Jornada'].le(last)) & (datos['Equipo1'] == equipo)].values
+        
+            res2 = datos.loc[(datos['Temporada'] == '{0}-{1}'.format(año1, año2)) & (datos['Jornada'].le(last)) & (datos['Equipo2'] == equipo)].values
+
+        elif first > 0 and last == 0: #Inicia en el rango y llega hasta el final
+
+            res1 = datos.loc[(datos['Temporada'] == '{0}-{1}'.format(año1, año2)) & (datos['Jornada'].ge(first)) & (datos['Equipo1'] == equipo)].values
+        
+            res2 = datos.loc[(datos['Temporada'] == '{0}-{1}'.format(año1, año2)) & (datos['Jornada'].ge(first)) & (datos['Equipo2'] == equipo)].values
+
+        elif first > 0 and last > 0: #Si viene el rango completo
+
+            res1 = datos.loc[(datos['Temporada'] == '{0}-{1}'.format(año1, año2)) & (datos['Jornada'].ge(first) & datos['Jornada'].le(last)) & (datos['Equipo1'] == equipo)].values
+        
+            res2 = datos.loc[(datos['Temporada'] == '{0}-{1}'.format(año1, año2)) & (datos['Jornada'].ge(first) & datos['Jornada'].le(last)) & (datos['Equipo2'] == equipo)].values
+
+
+        if len(res1) == 0: #Verificacion de datos existentes
+            print("No se encontró en la base de datos")
+            show = "No se encontró en la base de datos" + "\n"
+            return show
+        
+        else:
+            
+            #Generar HTML
+            reporte_Partidos = open(archivo, 'w')
+
+            html_parte1 = '''
+            <body style="background-color:#F4F8F4;">
+            <h2 style="text-align: center;">"Reporte de jornada"</h2>
+            <table style="width: 50%; border-collapse: collapse; border-style: solid; margin: 0 auto;" border="1">
+            <tbody>
+            <tr>
+            <td style="width: 2%; text-align: center; border-style: solid; border-color: black; background-color: midnightblue;"><strong><span style="color: #ffffff;">Temporada</span></strong></td>
+            <td style="width: 5%; text-align: center; border-style: solid; border-color: black; background-color: midnightblue;"><strong><span style="color: #ffffff;">Jornada</span></strong></td>
+            <td style="width: 5%; text-align: center; border-style: solid; border-color: black; background-color: midnightblue;"><strong><span style="color: #ffffff;">Equipo 1</span></strong></td>
+            <td style="width: 2%; text-align: center; border-style: solid; border-color: black; background-color: midnightblue;"><strong><span style="color: #ffffff;">Equipo 2</span></strong></td>
+            <td style="width: 2%; text-align: center; border-style: solid; border-color: black; background-color: midnightblue;"><strong><span style="color: #ffffff;">Goles 1</span></strong></td>
+            <td style="width: 2%; text-align: center; border-style: solid; border-color: black; background-color: midnightblue;"><strong><span style="color: #ffffff;">Goles 2</span></strong></td>
+            </tr>'''
+
+            html_parte2 = ''
+     
+            for i in res1:
+                v_Temporada = i[0]
+                v_Jornada   = i[1]
+                v_Equipo1   = i[2]
+                v_Equipo2   = i[3]
+                v_Goles1    = i[4]
+                v_Goles2    = i[5]
+
+                html_parte2 += '''<tr>
+            <td style="width: 2%; text-align: center; border-style: solid; border-color: black; background-color: #F4F8F4;">{}</td>
+            <td style="width: 5%; text-align: center; border-style: solid; border-color: black; background-color: #F4F8F4;">{}</td>
+            <td style="width: 5%; text-align: left; border-style: solid; border-color: black; background-color: #F4F8F4ite;">{}</td>
+            <td style="width: 2%; text-align: left; border-style: solid; border-color: black; background-color: #F4F8F4;">{}</td>
+            <td style="width: 2%; text-align: center; border-style: solid; border-color: black; background-color: #F4F8F4;">{}</td>
+            <td style="width: 2%; text-align: center; border-style: solid; border-color: black; background-color: #F4F8F4;">{}</td>
+            </tr>'''.format(v_Temporada,v_Jornada,v_Equipo1,v_Equipo2,v_Goles1,v_Goles2)
+
+            for i in res2:
+                v_Temporada = i[0]
+                v_Jornada   = i[1]
+                v_Equipo1   = i[2]
+                v_Equipo2   = i[3]
+                v_Goles1    = i[4]
+                v_Goles2    = i[5]
+
+                html_parte2 += '''<tr>
+            <td style="width: 2%; text-align: center; border-style: solid; border-color: black; background-color: #F4F8F4;">{}</td>
+            <td style="width: 5%; text-align: center; border-style: solid; border-color: black; background-color: #F4F8F4;">{}</td>
+            <td style="width: 5%; text-align: left; border-style: solid; border-color: black; background-color: #F4F8F4ite;">{}</td>
+            <td style="width: 2%; text-align: left; border-style: solid; border-color: black; background-color: #F4F8F4;">{}</td>
+            <td style="width: 2%; text-align: center; border-style: solid; border-color: black; background-color: #F4F8F4;">{}</td>
+            <td style="width: 2%; text-align: center; border-style: solid; border-color: black; background-color: #F4F8F4;">{}</td>
+            </tr>'''.format(v_Temporada,v_Jornada,v_Equipo1,v_Equipo2,v_Goles1,v_Goles2)
+                
+
+            hmtl_fin = '''
+            </tbody>
+            </table> </body>'''
+
+            html_archivo = html_parte1 + html_parte2 + hmtl_fin
+
+            reporte_Partidos.write(html_archivo)
+            reporte_Partidos.close()
+
+            print('Reporte creado con éxito')
+            webbrowser.open_new_tab(archivo)
+
+            show = "Generando archivos de resultados de temporada {} - {} del equipo {}".format(año1,año2,equipo) + "\n"
+            print(show)
+            return show
+
+    def topCSV(self,condicion, año1,año2,num):
+        path = documento.path.dirname(documento.path.abspath(__file__))+ "\LaLigaBot.csv" #Ruta
+        df = pd.read_csv(path) #Lectura
+        
+        df.values [0][0]
+
+        bandera = int(num)
+
+        datos = pd.DataFrame(df, columns=["Temporada", "Equipo1", "Equipo2", "Goles1", "Goles2"])
+
+        #Calculo de puntos --------- Estructura similar a la parte de Tabla temporada...
+        arregloDePuntos = []
+        arregloEquiposAnalizados = []
+       
+        # Obtiene el arreglo de temporada
+        arregloEquipos = datos.loc[(datos['Temporada'] == '{0}-{1}'.format(año1, año2))].values 
+        #print(arregloEquipos)
+        if len(arregloEquipos) == 0:
+            print("No se encontró en la base de datos")
+            show = "No se encontró en la base de datos" + "\n"
+            return show
+        else:
+
+            #Recorro por equipos para tener la lista de equipos
+            for equipo in arregloEquipos:
+
+                if equipo[1] in arregloEquiposAnalizados: #Si está paso, si no entonces lo agrego al arreglo
+                    pass
+                else: arregloEquiposAnalizados.append(equipo[1])  
+
+            #Una vez teniendo el arreglo de equipos que jugaron se procede a buscar en el csv y validar puntos
+            for equipo_1 in arregloEquiposAnalizados:
+
+                # Obtiene el arreglo con los datos donde el equipo fue local
+                aux = datos.loc[(datos['Temporada'] == '{0}-{1}'.format(año1, año2)) & (datos['Equipo1'] == equipo_1)].values
+                
+                #Teniendo el arreglo local completo entonces se recorre para la verificacion de puntos
+                contadorPuntos = 0
+        
+                for golL in aux:
+        
+                    gol1 = golL[3] #Se obtienen los goles -> gol1 es goles del equipo analizado
+                    gol2 = golL[4]
+
+                    #Pasando a int:
+                    g1 = int(gol1)
+                    g2 = int(gol2)
+
+                    if g1 > g2: #Si ganó
+                        contadorPuntos+=3
+                    elif g1 == g2: #Si empató
+                        contadorPuntos+=1
+
+                #Ahora con el arreglo de visitante
+                aux = datos.loc[(datos['Temporada'] == '{0}-{1}'.format(año1, año2)) & (datos['Equipo2'] == equipo_1)].values
+
+                #Teniendo el arreglo visitante completo entonces se recorre para la verificacion de puntos
+                for golV in aux:
+
+                    gol1 = golV[3] 
+                    gol2 = golV[4] #Se obtienen los goles -> gol2 es goles del equipo analizado
+
+                    #Pasando a int:
+                    g1 = int(gol1)
+                    g2 = int(gol2)
+
+                    if g2 > g1: #Si ganó
+                        contadorPuntos+=3
+                    elif g2 == g1: #Si empató
+                        contadorPuntos+=1
+                
+                arregloDePuntos.append(contadorPuntos) #Se agregan los puntos obtenidos por el equipo
+            
+            #Ahora el ordenamiento por defecto mayor a menor
+            #Método de burbuja
+            for i in range(1,len(arregloDePuntos)):
+                for j in range(0,len(arregloDePuntos)-i):
+                    if(arregloDePuntos[j+1] > arregloDePuntos[j]):
+                        aux1 = arregloDePuntos[j]
+                        aux2 = arregloEquiposAnalizados[j]
+
+                        arregloDePuntos[j]=arregloDePuntos[j+1]
+                        arregloDePuntos[j+1]=aux1
+
+                        arregloEquiposAnalizados[j]=arregloEquiposAnalizados[j+1]
+                        arregloEquiposAnalizados[j+1]=aux2
+
+            #Mostrado de datos según bandera y condición
+            if condicion == "SUPERIOR":
+
+                if bandera > len(arregloEquiposAnalizados):
+                    bandera = len(arregloEquiposAnalizados)
+                
+                texto = "El top superior de la temporada {}-{} fue:\n".format(año1,año2)
+
+                #Iteracion de datos a mostrar
+                for i in range(bandera):
+                    texto+= "{}.{} \n".format(i+1,arregloEquiposAnalizados[i])
+                return texto
+            
+            elif condicion == "INFERIOR":
+                
+                if bandera > len(arregloEquiposAnalizados):
+                    bandera = len(arregloEquiposAnalizados)
+                
+                texto = "El top inferior de la temporada {}-{} fue:\n".format(año1,año2)
+
+                #Iteracion de datos a mostrar
+                contador = 0
+                for item in reversed(arregloEquiposAnalizados):
+
+                    if contador > bandera:
+                        break
+                    else:
+                        texto+= "{}.{} \n".format(contador+1,item)
+                        contador+=1
+                        
+                return texto
+
+
+
+
         
